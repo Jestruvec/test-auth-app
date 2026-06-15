@@ -1,0 +1,126 @@
+---
+import SplashScreen from "@/components/splash-screen.astro";
+import LandingScreen from "@/components/landing-screen.astro";
+import CompleteScreen from "@/components/complete-screen.astro";
+import FaceIdScreen from "@/components/face-id-screen.astro";
+
+import Layout from "@/layouts/layout.astro";
+---
+
+<Layout>
+  <div id="splash" class="fixed inset-0 z-50 transition-opacity duration-500">
+    <SplashScreen />
+  </div>
+  <div
+    id="landing"
+    class="fixed inset-0 z-40 opacity-0 transition-opacity duration-500 pointer-events-none"
+  >
+    <LandingScreen />
+  </div>
+  <div
+    id="complete"
+    class="fixed inset-0 z-30 opacity-0 transition-opacity duration-500 pointer-events-none"
+  >
+    <CompleteScreen />
+  </div>
+  <div
+    id="faceid"
+    class="fixed inset-0 z-20 opacity-0 transition-opacity duration-500 pointer-events-none"
+  >
+    <FaceIdScreen />
+  </div>
+  <div
+    id="counter"
+    class="fixed inset-0 z-10 opacity-0 transition-opacity duration-500 pointer-events-none"
+  ></div>
+</Layout>
+
+<script>
+  let registerFormMounted = false;
+
+  window.addEventListener("DOMContentLoaded", () => {
+    const splash = document.getElementById("splash");
+    const landing = document.getElementById("landing");
+    const complete = document.getElementById("complete");
+    const faceid = document.getElementById("faceid");
+    const counter = document.getElementById("counter");
+    const registerBtn = document.getElementById("register-btn");
+    const doneBtn = document.getElementById("done-btn");
+
+    setTimeout(() => {
+      if (splash && landing) {
+        splash.style.opacity = "0";
+        splash.style.pointerEvents = "none";
+        landing.style.opacity = "1";
+        landing.style.pointerEvents = "auto";
+
+        setTimeout(() => {
+          splash.style.display = "none";
+        }, 500);
+      }
+    }, 2000);
+
+    registerBtn?.addEventListener("click", async () => {
+      if (landing && counter) {
+        if (!registerFormMounted) {
+          const [
+            { createApp },
+            { MareComponentsPlugin },
+            { default: Aura },
+            { default: RegisterForm },
+          ] = await Promise.all([
+            import("vue"),
+            import("@tpc-development/mare-ui-components"),
+            import("@primeuix/themes/aura"),
+            import("../components/register-form.vue"),
+          ]);
+
+          const primeConfig = {
+            ripple: true,
+            theme: {
+              preset: Aura,
+              options: {
+                prefix: "p",
+                darkModeSelector: '[data-theme="dark"]',
+                cssLayer: false,
+              },
+            },
+          };
+
+          const mareConfig = {
+            productId: "app",
+            applicationId: "astro-app",
+            primevueConfig: primeConfig,
+          };
+
+          const app = createApp(RegisterForm);
+          app.use(MareComponentsPlugin, mareConfig);
+          app.mount(counter);
+          registerFormMounted = true;
+        }
+
+        landing.style.opacity = "0";
+        landing.style.pointerEvents = "none";
+        counter.style.opacity = "1";
+        counter.style.pointerEvents = "auto";
+
+        setTimeout(() => {
+          landing.style.display = "none";
+        }, 500);
+      }
+    });
+
+    doneBtn?.addEventListener("click", () => {
+      if (complete && faceid) {
+        complete.style.opacity = "0";
+        complete.style.pointerEvents = "none";
+        faceid.style.opacity = "1";
+        faceid.style.pointerEvents = "auto";
+
+        setTimeout(() => {
+          complete.style.display = "none";
+        }, 500);
+      }
+    });
+  });
+</script>

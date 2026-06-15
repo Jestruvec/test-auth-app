@@ -1,0 +1,69 @@
+---
+import FaceId from "../assets/images/face-id.png";
+---
+
+<div class="h-full flex flex-col">
+  <div
+    class="h-[40%] z-1 flex justify-center"
+    style="
+					background: linear-gradient(
+						180deg,
+						#020109 9.33%,
+						#1b2545 42.71%,
+						#2d4e72 70.53%,
+						#5a7fa0 87.22%,
+						#a0bac8 100.57%,
+						#d4dfe6 111.7%,
+						#f5f2ef 120.6%
+					);
+				"
+  >
+    <img src={FaceId.src} alt="face id" class="h-auto w-auto" />
+  </div>
+
+  <div class="bg-white h-[60%] p-8 flex flex-col gap-8 max-w-md mx-auto z-3">
+    <div class="flex flex-col gap-6 flex-1">
+      <div class="space-y-3">
+        <p class="tpc-typography-title-m text-tpc-fg-default">
+          Inicia sesión más rápido con Face ID
+        </p>
+        <p class="tpc-typography-body-m text-tpc-fg-default">
+          Puedes iniciar sesión en la app de forma instantánea y segura con
+          datos biométricos.
+        </p>
+      </div>
+
+      <div class="p-4 bg-tpc-bg-alternative flex gap-4 rounded-tpc-container-s">
+        <div>
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="24"
+            height="24"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            class="icon icon-tabler icons-tabler-outline icon-tabler-info-circle"
+          >
+            <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+            <path d="M3 12a9 9 0 1 0 18 0a9 9 0 0 0 -18 0"></path>
+            <path d="M12 9h.01"></path>
+            <path d="M11 12h1v4h1"></path>
+          </svg>
+        </div>
+
+        <p class="tpc-typography-body-s text-tpc-fg-default">
+          Puedes desactivarlo en cualquier momento desde la configuración.
+        </p>
+      </div>
+    </div>
+    <div class="flex flex-col gap-5">
+      <button class="py-4 px-5.5 bg-[#183456] rounded-full text-white">
+        Habilitar Face ID
+      </button>
+      <button class="underline"> Omitir por ahora </button>
+    </div>
+  </div>
+</div>

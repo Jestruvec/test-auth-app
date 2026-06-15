@@ -1,0 +1,7 @@
+dist
+node_modules
+public
+coverage
+test-results
+.astro
+pnpm-lock.yaml

@@ -1,0 +1,41 @@
+---
+import Notifications from "../assets/images/notifications.png";
+---
+
+<div class="h-full flex flex-col">
+  <div
+    class="h-[40%] z-1 flex justify-center"
+    style="
+					background: linear-gradient(
+						180deg,
+						#020109 9.33%,
+						#1b2545 42.71%,
+						#2d4e72 70.53%,
+						#5a7fa0 87.22%,
+						#a0bac8 100.57%,
+						#d4dfe6 111.7%,
+						#f5f2ef 120.6%
+					);
+				"
+  >
+    <img src={Notifications.src} alt="notifications" class="h-auto w-auto" />
+  </div>
+
+  <div class="bg-white h-[60%] p-8 flex flex-col gap-8 max-w-md mx-auto z-3">
+    <div class="flex flex-col flex-1">
+      <div class="space-y-3">
+        <p class="tpc-typography-title-m text-tpc-fg-default">
+          No te pierdas nada sobre tu viaje.
+        </p>
+        <p class="tpc-typography-body-m text-tpc-fg-default">
+          Recibe notificaciones sobre ofertas especiales, tus próximos viajes y
+          actividades durante tu estadía.
+        </p>
+      </div>
+    </div>
+    <div class="flex flex-col gap-5">
+      <button class="rounded-full"> Habilitar notificaciones </button>
+      <button> Omitir por ahora </button>
+    </div>
+  </div>
+</div>

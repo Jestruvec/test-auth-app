@@ -1,0 +1,46 @@
+{
+  "name": "astro-app",
+  "type": "module",
+  "version": "0.0.1",
+  "engines": {
+    "node": ">=22.12.0"
+  },
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview",
+    "astro": "astro",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix"
+  },
+  "dependencies": {
+    "@astrojs/vue": "^6.0.1",
+    "@primeuix/themes": "^2.0.3",
+    "@tailwindcss/vite": "^4.3.1",
+    "@tpc-development/mare-ui-components": "^3.400.177",
+    "@tpc-development/mare-ui-core-styles": "^3.400.154",
+    "@vee-validate/zod": "^4.15.1",
+    "astro": "^6.4.6",
+    "aws-amplify": "^6.18.0",
+    "pinia": "^3.0.4",
+    "tailwindcss": "^4.3.1",
+    "vee-validate": "^4.15.1",
+    "vue": "^3.5.38",
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@cspell/dict-es-es": "^3.0.8",
+    "@cspell/eslint-plugin": "^10.0.1",
+    "@eslint/js": "^10.0.1",
+    "@types/node": "^25.9.3",
+    "@vue/eslint-config-typescript": "^14.8.0",
+    "eslint": "^10.5.0",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-prettier": "^5.5.6",
+    "eslint-plugin-unicorn": "^66.0.0",
+    "eslint-plugin-vue": "^10.9.2",
+    "globals": "^17.6.0",
+    "prettier": "^3.8.4",
+    "typescript-eslint": "^8.61.0"
+  }
+}

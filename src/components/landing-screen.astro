@@ -1,0 +1,234 @@
+---
+import PalaceResortsLogo from "@/assets/images/palace-resorts.png";
+import PalaceResortsBlackLogo from "@/assets/images/palace-resorts-black.png";
+import Carousel_1 from "@/assets/images/carousel-1.png";
+import Carousel_2 from "@/assets/images/carousel-2.png";
+import Carousel_3 from "@/assets/images/carousel-3.png";
+import Carousel_4 from "@/assets/images/carousel-4.png";
+import Carousel_5 from "@/assets/images/carousel-5.png";
+
+const contentSlides = [
+  {
+    logo: PalaceResortsLogo,
+    image: Carousel_1,
+    title: "Todo el resort en un solo lugar",
+    description: "Sacá el máximo partido a tu viaje. Accede a todos nuestros servicios durante tu estadía.",
+    background: "linear-gradient(180deg,#020109 9.33%,#1b2545 42.71%,#2d4e72 70.53%,#5a7fa0 87.22%,#a0bac8 100.57%,#d4dfe6 111.7%,#f5f2ef 120.6%)"
+  },
+   {
+    logo: PalaceResortsBlackLogo,
+    image: Carousel_2,
+    title: "Ahorra tiempo en tu check-in",
+    description: "",
+    background: "linear-gradient(135deg,#c5b9e0 0%,#9a8ac0 20%,#6b5b95 40%,#3d2b5e 60%,#1a0a2e 80%,#0d0517 100%)"
+  },
+   {
+    logo: PalaceResortsBlackLogo,
+    image: Carousel_3,
+    title: "Del menú a tu habitación",
+    description: "",
+    background: "linear-gradient(135deg,#d4c9b0 0%,#a39680 20%,#756b52 40%,#4d4332 60%,#2a2416 80%,#1a160e 100%)"
+  },
+   {
+    logo: PalaceResortsBlackLogo,
+    image: Carousel_4,
+    title: "Cada día trae algo nuevo",
+    description: "",
+    background: "linear-gradient(135deg,#b0d4c4 0%,#7aa38c 20%,#4a7560 40%,#2b4d38 60%,#0a2416 80%,#05120b 100%)"
+  },
+   {
+    logo: PalaceResortsBlackLogo,
+    image: Carousel_5,
+    title: "¿Necesitas algo? Solo pídelo",
+    description: "",
+    background: "linear-gradient(135deg,#b0c5e0 0%,#7a95c0 20%,#4a6795 40%,#2b3d5e 60%,#0a1e2e 80%,#050f17 100%)"
+  }
+];
+
+---
+
+<style>
+  @keyframes slideOut {
+    from {
+      opacity: 1;
+      transform: translateX(0);
+    }
+    to {
+      opacity: 0;
+      transform: translateX(-30px);
+    }
+  }
+
+  @keyframes slideIn {
+    from {
+      opacity: 0;
+      transform: translateX(30px);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+
+  .slide-out {
+    animation: slideOut 0.3s ease-out forwards;
+  }
+
+  .slide-in {
+    animation: slideIn 0.4s ease-out forwards;
+  }
+</style>
+
+<div
+  id="landing-container"
+  class="h-full flex items-center justify-center p-8 relative"
+  style={`background: ${contentSlides[0].background};`}
+>
+  <div
+    id="landing-overlay"
+    class="absolute inset-0 pointer-events-none"
+    style="opacity: 0; transition: opacity 0.8s ease-in-out; z-index: 0;"
+  ></div>
+  <div class="w-full max-w-md flex flex-col justify-between gap-6 h-full relative z-10">
+    <div class="flex flex-col gap-8">
+      <img
+        id="logo-img"
+        src={contentSlides[0].logo.src}
+        alt="Palace Resorts Logo"
+        class="w-31.5 h-auto mx-auto"
+      />
+
+      <div id="landing-content">
+        <div class="pt-8 -mx-8 h-64 flex items-center justify-center">
+          <img
+            id="service-img"
+            src={contentSlides[0].image.src}
+            alt="Service Cards"
+            class="max-w-full max-h-full object-contain"
+          />
+        </div>
+
+        <div class="text-white space-y-2 text-center px-8 h-12">
+          <p id="title-text" class="tpc-typography-title-m">{contentSlides[0].title}</p>
+          <p id="description-text" class="tpc-typography-body-m h-12">
+            {contentSlides[0].description}
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <div class="flex justify-center gap-2" id="slide-indicators">
+      {contentSlides.map((_, index) => (
+        <button
+          class="slide-indicator h-2 rounded-full transition-all"
+          data-index={index}
+          style={index === 0 ? "width: 32px; background: white;" : "width: 8px; background: rgba(255, 255, 255, 0.3);"}
+        />
+      ))}
+    </div>
+
+    <div class="flex flex-col gap-4">
+
+      <div class="flex flex-col gap-2">
+        <button id="register-btn" class="py-2.5 px-5.5 bg-white rounded-full"> Registrarse </button>
+        <button
+          class="rounded-full border-none text-white! py-2.5 px-5.5"
+          style="background: rgba(255, 255, 255, 0.08)"
+        >
+          Iniciar sesión
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script define:vars={{ contentSlides }}>
+  let currentSlide = 0;
+
+  function updateIndicators() {
+    const indicators = document.querySelectorAll('.slide-indicator');
+    indicators.forEach((indicator, index) => {
+      if (index === currentSlide) {
+        indicator.style.width = '32px';
+        indicator.style.background = 'white';
+      } else {
+        indicator.style.width = '8px';
+        indicator.style.background = 'rgba(255, 255, 255, 0.3)';
+      }
+    });
+  }
+
+  function updateContent() {
+    const slide = contentSlides[currentSlide];
+    const container = document.getElementById('landing-container');
+    const overlay = document.getElementById('landing-overlay');
+    const content = document.getElementById('landing-content');
+    const logoImg = document.getElementById('logo-img');
+    const serviceImg = document.getElementById('service-img');
+    const titleText = document.getElementById('title-text');
+    const descriptionText = document.getElementById('description-text');
+
+    if (container && overlay && content && logoImg && serviceImg && titleText && descriptionText) {
+      content.classList.add('slide-out');
+
+      overlay.style.background = slide.background;
+      overlay.style.opacity = '1';
+
+      setTimeout(() => {
+        logoImg.src = slide.logo.src;
+        serviceImg.src = slide.image.src;
+        titleText.textContent = slide.title;
+        descriptionText.textContent = slide.description;
+
+        content.classList.remove('slide-out');
+        content.classList.add('slide-in');
+
+        setTimeout(() => {
+          content.classList.remove('slide-in');
+        }, 400);
+      }, 300);
+
+      setTimeout(() => {
+        container.style.background = slide.background;
+        overlay.style.opacity = '0';
+      }, 800);
+    }
+
+    updateIndicators();
+  }
+
+  window.nextSlide = function() {
+    currentSlide = (currentSlide + 1) % contentSlides.length;
+    updateContent();
+  }
+
+  window.prevSlide = function() {
+    currentSlide = (currentSlide - 1 + contentSlides.length) % contentSlides.length;
+    updateContent();
+  }
+
+  window.goToSlide = function(index) {
+    if (index >= 0 && index < contentSlides.length) {
+      currentSlide = index;
+      updateContent();
+    }
+  }
+
+  let autoAdvanceInterval = setInterval(() => {
+    window.nextSlide();
+  }, 5000);
+
+  document.addEventListener('DOMContentLoaded', () => {
+    const indicators = document.querySelectorAll('.slide-indicator');
+    indicators.forEach((indicator) => {
+      indicator.addEventListener('click', () => {
+        const index = parseInt(indicator.getAttribute('data-index'));
+        clearInterval(autoAdvanceInterval);
+        window.goToSlide(index);
+        autoAdvanceInterval = setInterval(() => {
+          window.nextSlide();
+        }, 5000);
+      });
+    });
+  });
+</script>

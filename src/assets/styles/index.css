@@ -1,0 +1,11 @@
+@import "@tpc-development/mare-ui-core-styles/fonts.css";
+@import "tailwindcss";
+@import "@tpc-development/mare-ui-components/index.css";
+@import "@tpc-development/mare-ui-core-styles/index.css";
+
+html,
+body {
+  margin: 0;
+  width: 100%;
+  height: 100%;
+}
