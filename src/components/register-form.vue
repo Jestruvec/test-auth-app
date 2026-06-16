@@ -47,7 +47,7 @@ const { handleSubmit, errors } = useForm({
   validateOnMount: false,
 });
 
-type StepType = "email" | "otp" | "password";
+type StepType = "email" | "password" | "otp";
 const step = ref<StepType>("email");
 
 const otp = ref();
@@ -65,7 +65,7 @@ const passwordConfirm = useField<string>("passwordConfirm");
 
 const registerProgress = computed(() => {
   if (step.value === "email") return 25;
-  if (step.value === "otp") return 50;
+  if (step.value === "password") return 50;
   return 75;
 });
 
@@ -149,7 +149,7 @@ const onSubmit = handleSubmit((values) => {
   console.log(values);
 });
 
-const proceedToVerification = async () => {
+const proceedToPassword = async () => {
   // Validate only step 1 fields
   await email.validate();
   await firstName.validate();
@@ -160,6 +160,22 @@ const proceedToVerification = async () => {
     !!email.errorMessage.value ||
     !!firstName.errorMessage.value ||
     !!lastName.errorMessage.value;
+
+  if (hasErrors) {
+    return;
+  }
+
+  step.value = "password";
+};
+
+const proceedToOtp = async () => {
+  // Validate password fields
+  await password.validate();
+  await passwordConfirm.validate();
+
+  // Check if any password field has errors
+  const hasErrors =
+    !!password.errorMessage.value || !!passwordConfirm.errorMessage.value;
 
   if (hasErrors) {
     return;
@@ -190,7 +206,11 @@ const validateOtp = async () => {
     return;
   }
 
-  step.value = "password";
+  // OTP validated successfully, submit the form
+  await onSubmit();
+
+  // Notify parent to show complete screen
+  window.PalaceApp.emit("registration-complete");
 };
 
 const resendOtp = () => {
@@ -325,70 +345,14 @@ const resendOtp = () => {
               type="button"
               severity="primary"
               size="large"
-              @click="proceedToVerification"
+              @click="proceedToPassword"
             >
               Continuar
             </Button>
           </div>
         </article>
 
-        <!-- Step 2: OTP -->
-        <article
-          v-else-if="step === 'otp'"
-          key="otp"
-          class="pt-3 flex-1 flex flex-col justify-between"
-        >
-          <div>
-            <div class="space-y-2 mb-8">
-              <h2 class="tpc-typography-title-m text-tpc-fg-default">
-                Verifica tu email
-              </h2>
-              <p class="tpc-typography-body-m text-tpc-fg-default">
-                Ingresa el código de 4 dígitos que enviamos a j***doe@gmail.com
-              </p>
-            </div>
-
-            <div class="flex flex-col items-center justify-center py-6 gap-6">
-              <InputOtp
-                ref="otpInput"
-                v-model="otp"
-                @update:model-value="validateOtp"
-              />
-
-              <div
-                v-if="isValidatingOtp"
-                class="flex items-center gap-2 tpc-typography-body-m text-tpc-fg-default"
-              >
-                <ProgressSpinner class="mare:w-5 mare:h-5" />
-                Validando...
-              </div>
-
-              <Banner
-                v-if="otpError"
-                severity="danger"
-                class="text-tpc-fg-danger"
-              >
-                <div class="flex gap-4 items-center">
-                  <Icon icon="IconAlertCircle" class="text-tpc-fg-danger" />
-                  <p class="tpc-typography-body-xs text-tpc-fg-danger">
-                    Codigo incorrecto. 3 intentos restantes.
-                  </p>
-                </div>
-              </Banner>
-
-              <p class="tpc-typography-body-m text-tpc-fg-default">
-                El codigo expira en
-                {{ otpTimeFormatted }}
-              </p>
-            </div>
-          </div>
-
-          <div class="flex justify-center">
-            <Button label="Reenviar codigo" link @click="resendOtp" />
-          </div>
-        </article>
-
-        <!-- Step 3: Password -->
+        <!-- Step 2: Password -->
         <article
           v-else-if="step === 'password'"
           key="password"
@@ -523,10 +487,66 @@ const resendOtp = () => {
               class="rounded-full"
               severity="primary"
               size="large"
-              @click="onSubmit"
+              @click="proceedToOtp"
             >
-              Crear mi Palace ID
+              Continuar
             </Button>
+          </div>
+        </article>
+
+        <!-- Step 3: OTP -->
+        <article
+          v-else-if="step === 'otp'"
+          key="otp"
+          class="pt-3 flex-1 flex flex-col justify-between"
+        >
+          <div>
+            <div class="space-y-2 mb-8">
+              <h2 class="tpc-typography-title-m text-tpc-fg-default">
+                Verifica tu email
+              </h2>
+              <p class="tpc-typography-body-m text-tpc-fg-default">
+                Ingresa el código de 4 dígitos que enviamos a j***doe@gmail.com
+              </p>
+            </div>
+
+            <div class="flex flex-col items-center justify-center py-6 gap-6">
+              <InputOtp
+                ref="otpInput"
+                v-model="otp"
+                @update:model-value="validateOtp"
+              />
+
+              <div
+                v-if="isValidatingOtp"
+                class="flex items-center gap-2 tpc-typography-body-m text-tpc-fg-default"
+              >
+                <ProgressSpinner class="mare:w-5 mare:h-5" />
+                Validando...
+              </div>
+
+              <Banner
+                v-if="otpError"
+                severity="danger"
+                class="text-tpc-fg-danger"
+              >
+                <div class="flex gap-4 items-center">
+                  <Icon icon="IconAlertCircle" class="text-tpc-fg-danger" />
+                  <p class="tpc-typography-body-xs text-tpc-fg-danger">
+                    Codigo incorrecto. 3 intentos restantes.
+                  </p>
+                </div>
+              </Banner>
+
+              <p class="tpc-typography-body-m text-tpc-fg-default">
+                El codigo expira en
+                {{ otpTimeFormatted }}
+              </p>
+            </div>
+          </div>
+
+          <div class="flex justify-center">
+            <Button label="Reenviar codigo" link @click="resendOtp" />
           </div>
         </article>
       </Transition>

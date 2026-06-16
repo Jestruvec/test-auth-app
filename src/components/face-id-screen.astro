@@ -60,10 +60,20 @@ import FaceId from "../assets/images/face-id.png";
       </div>
     </div>
     <div class="flex flex-col gap-5">
-      <button class="py-4 px-5.5 bg-[#183456] rounded-full text-white">
+      <button id="enable-faceid-btn" class="py-4 px-5.5 bg-[#183456] rounded-full text-white">
         Habilitar Face ID
       </button>
-      <button class="underline"> Omitir por ahora </button>
+      <button id="skip-faceid-btn" class="underline"> Omitir por ahora </button>
     </div>
   </div>
 </div>
+
+<script>
+  document.getElementById('enable-faceid-btn')?.addEventListener('click', () => {
+    window.PalaceApp.emit('navigate', { to: 'notification' });
+  });
+
+  document.getElementById('skip-faceid-btn')?.addEventListener('click', () => {
+    window.PalaceApp.emit('navigate', { to: 'notification' });
+  });
+</script>

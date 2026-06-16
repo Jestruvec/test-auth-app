@@ -152,3 +152,9 @@
     <button id="done-btn" class="py-4 px-5.5 bg-white rounded-full"> Hecho </button>
   </div>
 </div>
+
+<script>
+  document.getElementById('done-btn')?.addEventListener('click', () => {
+    window.PalaceApp.emit('navigate', { to: 'faceid' });
+  });
+</script>

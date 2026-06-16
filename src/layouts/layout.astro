@@ -16,3 +16,40 @@ import "@/assets/styles/index.css";
     <slot />
   </body>
 </html>
+
+<script is:inline>
+  /**
+   * PalaceApp - Global namespace and event bus
+   * Prevents naming collisions and provides centralized communication
+   */
+  window.PalaceApp = {
+    version: '1.0.0',
+
+    /**
+     * Listen to app events
+     * @param {string} event - Event name (will be prefixed with 'palace:')
+     * @param {Function} callback - Event handler
+     */
+    on(event, callback) {
+      window.addEventListener(`palace:${event}`, callback);
+    },
+
+    /**
+     * Emit app events
+     * @param {string} event - Event name (will be prefixed with 'palace:')
+     * @param {any} detail - Event data
+     */
+    emit(event, detail) {
+      window.dispatchEvent(new CustomEvent(`palace:${event}`, { detail }));
+    },
+
+    /**
+     * Remove event listener
+     * @param {string} event - Event name (will be prefixed with 'palace:')
+     * @param {Function} callback - Event handler to remove
+     */
+    off(event, callback) {
+      window.removeEventListener(`palace:${event}`, callback);
+    }
+  };
+</script>

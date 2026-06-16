@@ -1,6 +1,6 @@
 ---
+import { Image } from "astro:assets";
 import PalaceResortsLogo from "@/assets/images/palace-resorts.png";
-import PalaceResortsBlackLogo from "@/assets/images/palace-resorts-black.png";
 import Carousel_1 from "@/assets/images/carousel-1.png";
 import Carousel_2 from "@/assets/images/carousel-2.png";
 import Carousel_3 from "@/assets/images/carousel-3.png";
@@ -9,43 +9,223 @@ import Carousel_5 from "@/assets/images/carousel-5.png";
 
 const contentSlides = [
   {
-    logo: PalaceResortsLogo,
     image: Carousel_1,
     title: "Todo el resort en un solo lugar",
-    description: "Sacá el máximo partido a tu viaje. Accede a todos nuestros servicios durante tu estadía.",
-    background: "linear-gradient(180deg,#020109 9.33%,#1b2545 42.71%,#2d4e72 70.53%,#5a7fa0 87.22%,#a0bac8 100.57%,#d4dfe6 111.7%,#f5f2ef 120.6%)"
+    description:
+      "Sacá el máximo partido a tu viaje. Accede a todos nuestros servicios durante tu estadía.",
+    colors: { l: "#86e0f9", m: "#016692", d: "#022648" },
   },
-   {
-    logo: PalaceResortsBlackLogo,
+  {
     image: Carousel_2,
     title: "Ahorra tiempo en tu check-in",
     description: "",
-    background: "linear-gradient(135deg,#c5b9e0 0%,#9a8ac0 20%,#6b5b95 40%,#3d2b5e 60%,#1a0a2e 80%,#0d0517 100%)"
+    colors: { l: "#d7cef9", m: "#3c5184", d: "#15163a" },
   },
-   {
-    logo: PalaceResortsBlackLogo,
+  {
     image: Carousel_3,
     title: "Del menú a tu habitación",
     description: "",
-    background: "linear-gradient(135deg,#d4c9b0 0%,#a39680 20%,#756b52 40%,#4d4332 60%,#2a2416 80%,#1a160e 100%)"
+    colors: { l: "#dcd4ce", m: "#454f52", d: "#171514" },
   },
-   {
-    logo: PalaceResortsBlackLogo,
+  {
     image: Carousel_4,
     title: "Cada día trae algo nuevo",
     description: "",
-    background: "linear-gradient(135deg,#b0d4c4 0%,#7aa38c 20%,#4a7560 40%,#2b4d38 60%,#0a2416 80%,#05120b 100%)"
+    colors: { l: "#bcdccb", m: "#235e5b", d: "#0e251f" },
   },
-   {
-    logo: PalaceResortsBlackLogo,
+  {
     image: Carousel_5,
     title: "¿Necesitas algo? Solo pídelo",
     description: "",
-    background: "linear-gradient(135deg,#b0c5e0 0%,#7a95c0 20%,#4a6795 40%,#2b3d5e 60%,#0a1e2e 80%,#050f17 100%)"
-  }
+    colors: { l: "#b6dce8", m: "#155b6f", d: "#08242f" },
+  },
 ];
-
 ---
+
+<div
+  id="landing-container"
+  class="h-full flex items-center justify-center grad"
+  style={`--l: ${contentSlides[0].colors.l}; --m: ${contentSlides[0].colors.m}; --d: ${contentSlides[0].colors.d};`}
+>
+  <div class="py-8 px-6 w-full max-w-md flex flex-col justify-between h-full">
+    <Image
+      src={PalaceResortsLogo}
+      alt="Palace Resorts Logo"
+      class="w-31.5 h-auto mx-auto mb-8"
+    />
+
+    <div class="flex flex-col gap-8">
+      <div id="landing-content" class="flex flex-col gap-8">
+        <div class="relative h-61.25">
+          {
+            contentSlides.map((slide, index) => (
+              <Image
+                src={slide.image}
+                alt={slide.title}
+                class:list={[
+                  "carousel-image absolute inset-0 w-full h-full object-contain",
+                  { active: index === 0 },
+                ]}
+                data-slide={index}
+              />
+            ))
+          }
+        </div>
+
+        <p
+          id="title-text"
+          class="tpc-typography-title-m text-white text-center h-18"
+        >
+          {contentSlides[0].title}
+        </p>
+      </div>
+
+      <div class="flex justify-center gap-2" id="slide-indicators">
+        {
+          contentSlides.map((_, index) => (
+            <button
+              class="slide-indicator h-2 rounded-full transition-all"
+              data-index={index}
+              style={
+                index === 0
+                  ? "width: 32px; background: white;"
+                  : "width: 8px; background: rgba(255, 255, 255, 0.3);"
+              }
+            />
+          ))
+        }
+      </div>
+    </div>
+
+    <div class="flex flex-col gap-2">
+      <button
+        id="register-btn"
+        class="py-2.5 px-5.5 bg-white rounded-full tpc-typography-label-m"
+      >
+        Registrarse
+      </button>
+      <button
+        id="login-btn"
+        class="rounded-full border-none text-white! py-2.5 px-5.5 tpc-typography-label-m"
+        style="background: rgba(255, 255, 255, 0.08)"
+      >
+        Iniciar sesión
+      </button>
+      <button
+        id="login-btn"
+        class="rounded-full border-none text-white! py-2.5 px-5.5 tpc-typography-label-s"
+      >
+        Continuar como invitado
+      </button>
+    </div>
+  </div>
+</div>
+
+<script define:vars={{ contentSlides }}>
+  // ============================================================
+  // Navigation event listeners
+  // ============================================================
+  document.getElementById("register-btn")?.addEventListener("click", () => {
+    window.PalaceApp.emit("navigate", { to: "register" });
+  });
+
+  document.getElementById("login-btn")?.addEventListener("click", () => {
+    window.PalaceApp.emit("navigate", { to: "login" });
+  });
+
+  // ============================================================
+  // Carousel functionality
+  // ============================================================
+  let currentSlide = 0;
+
+  const updateIndicators = () => {
+    const indicators = document.querySelectorAll(".slide-indicator");
+    indicators.forEach((indicator, index) => {
+      if (index === currentSlide) {
+        indicator.style.width = "32px";
+        indicator.style.background = "white";
+      } else {
+        indicator.style.width = "8px";
+        indicator.style.background = "rgba(255, 255, 255, 0.3)";
+      }
+    });
+  };
+
+  const updateContent = () => {
+    const slide = contentSlides[currentSlide];
+    const container = document.getElementById("landing-container");
+    const content = document.getElementById("landing-content");
+    const carouselImages = document.querySelectorAll(".carousel-image");
+    const titleText = document.getElementById("title-text");
+
+    if (container && content && carouselImages.length && titleText) {
+      content.classList.add("slide-out");
+
+      // Update gradient colors
+      container.style.setProperty("--l", slide.colors.l);
+      container.style.setProperty("--m", slide.colors.m);
+      container.style.setProperty("--d", slide.colors.d);
+
+      setTimeout(() => {
+        // Hide all images, show only current slide
+        carouselImages.forEach((img, index) => {
+          if (index === currentSlide) {
+            img.classList.add("active");
+          } else {
+            img.classList.remove("active");
+          }
+        });
+
+        titleText.textContent = slide.title;
+
+        content.classList.remove("slide-out");
+        content.classList.add("slide-in");
+
+        setTimeout(() => {
+          content.classList.remove("slide-in");
+        }, 400);
+      }, 300);
+    }
+
+    updateIndicators();
+  };
+
+  const nextSlide = () => {
+    currentSlide = (currentSlide + 1) % contentSlides.length;
+    updateContent();
+  };
+
+  const prevSlide = () => {
+    currentSlide =
+      (currentSlide - 1 + contentSlides.length) % contentSlides.length;
+    updateContent();
+  };
+
+  const goToSlide = (index) => {
+    if (index >= 0 && index < contentSlides.length) {
+      currentSlide = index;
+      updateContent();
+    }
+  };
+
+  // Attach click handlers to slide indicators
+  const indicators = document.querySelectorAll(".slide-indicator");
+  indicators.forEach((indicator) => {
+    indicator.addEventListener("click", () => {
+      const index = parseInt(indicator.getAttribute("data-index") || "0");
+      goToSlide(index);
+    });
+  });
+
+  // Auto-advance carousel (optional - uncomment to enable)
+  // let autoAdvanceInterval = setInterval(nextSlide, 5000);
+  // indicators.forEach((indicator) => {
+  //   indicator.addEventListener('click', () => {
+  //     clearInterval(autoAdvanceInterval);
+  //     autoAdvanceInterval = setInterval(nextSlide, 5000);
+  //   });
+  // });
+</script>
 
 <style>
   @keyframes slideOut {
@@ -77,158 +257,106 @@ const contentSlides = [
   .slide-in {
     animation: slideIn 0.4s ease-out forwards;
   }
+
+  /* ============================================================
+     GRADIENTES ANIMADOS
+     ============================================================ */
+  @property --cx {
+    syntax: "<percentage>";
+    inherits: false;
+    initial-value: 8%;
+  }
+  @property --cy {
+    syntax: "<percentage>";
+    inherits: false;
+    initial-value: 2%;
+  }
+  @property --cs {
+    syntax: "<percentage>";
+    inherits: false;
+    initial-value: 145%;
+  }
+  @property --l {
+    syntax: "<color>";
+    inherits: false;
+    initial-value: #d7cef9;
+  }
+  @property --m {
+    syntax: "<color>";
+    inherits: false;
+    initial-value: #3c5184;
+  }
+  @property --d {
+    syntax: "<color>";
+    inherits: false;
+    initial-value: #15163a;
+  }
+
+  .grad {
+    --cx: 8%;
+    --cy: 2%;
+    --cs: 145%;
+
+    background-image: radial-gradient(
+      var(--cs) calc(var(--cs) - 6%) at var(--cx) var(--cy),
+      var(--l) 0%,
+      var(--l) 16%,
+      var(--m) 44%,
+      var(--d) 68%
+    );
+
+    animation: grad-float 16s ease-in-out infinite;
+    transition:
+      --l 0.8s ease-in-out,
+      --m 0.8s ease-in-out,
+      --d 0.8s ease-in-out;
+    will-change: --cx, --cy, --cs;
+  }
+
+  @keyframes grad-float {
+    0% {
+      --cx: 6%;
+      --cy: 0%;
+      --cs: 140%;
+    }
+    25% {
+      --cx: 19%;
+      --cy: 9%;
+      --cs: 156%;
+    }
+    50% {
+      --cx: 12%;
+      --cy: 17%;
+      --cs: 148%;
+    }
+    75% {
+      --cx: 1%;
+      --cy: 7%;
+      --cs: 153%;
+    }
+    100% {
+      --cx: 6%;
+      --cy: 0%;
+      --cs: 140%;
+    }
+  }
+
+  /* Accesibilidad: respeta a quien reduce el movimiento */
+  @media (prefers-reduced-motion: reduce) {
+    .grad {
+      animation: none;
+    }
+  }
+
+  /* Carousel images */
+  .carousel-image {
+    opacity: 0;
+    pointer-events: none;
+    transition: none;
+  }
+
+  .carousel-image.active {
+    opacity: 1;
+    pointer-events: auto;
+  }
 </style>
-
-<div
-  id="landing-container"
-  class="h-full flex items-center justify-center p-8 relative"
-  style={`background: ${contentSlides[0].background};`}
->
-  <div
-    id="landing-overlay"
-    class="absolute inset-0 pointer-events-none"
-    style="opacity: 0; transition: opacity 0.8s ease-in-out; z-index: 0;"
-  ></div>
-  <div class="w-full max-w-md flex flex-col justify-between gap-6 h-full relative z-10">
-    <div class="flex flex-col gap-8">
-      <img
-        id="logo-img"
-        src={contentSlides[0].logo.src}
-        alt="Palace Resorts Logo"
-        class="w-31.5 h-auto mx-auto"
-      />
-
-      <div id="landing-content">
-        <div class="pt-8 -mx-8 h-64 flex items-center justify-center">
-          <img
-            id="service-img"
-            src={contentSlides[0].image.src}
-            alt="Service Cards"
-            class="max-w-full max-h-full object-contain"
-          />
-        </div>
-
-        <div class="text-white space-y-2 text-center px-8 h-12">
-          <p id="title-text" class="tpc-typography-title-m">{contentSlides[0].title}</p>
-          <p id="description-text" class="tpc-typography-body-m h-12">
-            {contentSlides[0].description}
-          </p>
-        </div>
-      </div>
-    </div>
-
-    <div class="flex justify-center gap-2" id="slide-indicators">
-      {contentSlides.map((_, index) => (
-        <button
-          class="slide-indicator h-2 rounded-full transition-all"
-          data-index={index}
-          style={index === 0 ? "width: 32px; background: white;" : "width: 8px; background: rgba(255, 255, 255, 0.3);"}
-        />
-      ))}
-    </div>
-
-    <div class="flex flex-col gap-4">
-
-      <div class="flex flex-col gap-2">
-        <button id="register-btn" class="py-2.5 px-5.5 bg-white rounded-full"> Registrarse </button>
-        <button
-          class="rounded-full border-none text-white! py-2.5 px-5.5"
-          style="background: rgba(255, 255, 255, 0.08)"
-        >
-          Iniciar sesión
-        </button>
-      </div>
-    </div>
-  </div>
-</div>
-
-<script define:vars={{ contentSlides }}>
-  let currentSlide = 0;
-
-  function updateIndicators() {
-    const indicators = document.querySelectorAll('.slide-indicator');
-    indicators.forEach((indicator, index) => {
-      if (index === currentSlide) {
-        indicator.style.width = '32px';
-        indicator.style.background = 'white';
-      } else {
-        indicator.style.width = '8px';
-        indicator.style.background = 'rgba(255, 255, 255, 0.3)';
-      }
-    });
-  }
-
-  function updateContent() {
-    const slide = contentSlides[currentSlide];
-    const container = document.getElementById('landing-container');
-    const overlay = document.getElementById('landing-overlay');
-    const content = document.getElementById('landing-content');
-    const logoImg = document.getElementById('logo-img');
-    const serviceImg = document.getElementById('service-img');
-    const titleText = document.getElementById('title-text');
-    const descriptionText = document.getElementById('description-text');
-
-    if (container && overlay && content && logoImg && serviceImg && titleText && descriptionText) {
-      content.classList.add('slide-out');
-
-      overlay.style.background = slide.background;
-      overlay.style.opacity = '1';
-
-      setTimeout(() => {
-        logoImg.src = slide.logo.src;
-        serviceImg.src = slide.image.src;
-        titleText.textContent = slide.title;
-        descriptionText.textContent = slide.description;
-
-        content.classList.remove('slide-out');
-        content.classList.add('slide-in');
-
-        setTimeout(() => {
-          content.classList.remove('slide-in');
-        }, 400);
-      }, 300);
-
-      setTimeout(() => {
-        container.style.background = slide.background;
-        overlay.style.opacity = '0';
-      }, 800);
-    }
-
-    updateIndicators();
-  }
-
-  window.nextSlide = function() {
-    currentSlide = (currentSlide + 1) % contentSlides.length;
-    updateContent();
-  }
-
-  window.prevSlide = function() {
-    currentSlide = (currentSlide - 1 + contentSlides.length) % contentSlides.length;
-    updateContent();
-  }
-
-  window.goToSlide = function(index) {
-    if (index >= 0 && index < contentSlides.length) {
-      currentSlide = index;
-      updateContent();
-    }
-  }
-
-  let autoAdvanceInterval = setInterval(() => {
-    window.nextSlide();
-  }, 5000);
-
-  document.addEventListener('DOMContentLoaded', () => {
-    const indicators = document.querySelectorAll('.slide-indicator');
-    indicators.forEach((indicator) => {
-      indicator.addEventListener('click', () => {
-        const index = parseInt(indicator.getAttribute('data-index'));
-        clearInterval(autoAdvanceInterval);
-        window.goToSlide(index);
-        autoAdvanceInterval = setInterval(() => {
-          window.nextSlide();
-        }, 5000);
-      });
-    });
-  });
-</script>
