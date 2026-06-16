@@ -209,22 +209,16 @@ const contentSlides = [
   };
 
   // Attach click handlers to slide indicators
+  let autoAdvanceInterval = setInterval(nextSlide, 5000);
   const indicators = document.querySelectorAll(".slide-indicator");
   indicators.forEach((indicator) => {
     indicator.addEventListener("click", () => {
       const index = parseInt(indicator.getAttribute("data-index") || "0");
       goToSlide(index);
+      clearInterval(autoAdvanceInterval);
+      autoAdvanceInterval = setInterval(nextSlide, 5000);
     });
   });
-
-  // Auto-advance carousel (optional - uncomment to enable)
-  // let autoAdvanceInterval = setInterval(nextSlide, 5000);
-  // indicators.forEach((indicator) => {
-  //   indicator.addEventListener('click', () => {
-  //     clearInterval(autoAdvanceInterval);
-  //     autoAdvanceInterval = setInterval(nextSlide, 5000);
-  //   });
-  // });
 </script>
 
 <style>
