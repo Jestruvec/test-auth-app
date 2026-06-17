@@ -293,7 +293,9 @@ const resendOtp = () => {
 <template>
   <div key="register" class="flex flex-col h-full max-w-md mx-auto">
     <div class="flex justify-between items-center gap-2 h-14 px-6 py-2">
-      <Icon icon="IconX" />
+      <div class="w-5 h-5">
+        <Icon icon="IconX" />
+      </div>
       <h2 class="tpc-typography-label-m bg text-tpc-fg-default">Sign up</h2>
       <div />
     </div>
@@ -328,7 +330,7 @@ const resendOtp = () => {
           class="pt-8 flex-1 flex flex-col gap-8"
         >
           <div
-            class="mx-auto p-0.5 rounded-full flex items-center justify-center"
+            class="mx-auto p-0.5 rounded-full flex items-center justify-center w-22 h-10"
             style="background: linear-gradient(to right, #1c6cc7, #03b9ff)"
           >
             <div
