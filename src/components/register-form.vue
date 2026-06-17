@@ -17,12 +17,20 @@ import {
   Banner,
 } from "@tpc-development/mare-ui-components";
 import { registerDataSchema } from "@/domain/schemas/register-data.schema";
-import MoonPalaceLogo from "@assets/images/moon-palace.png";
-import PalaceResortsLogo from "@assets/images/palace-resorts.png";
-import BaglioniResortsLogo from "@assets/images/baglioni-resorts.png";
-import LeBlancLogo from "@assets/images/le-blanc.png";
 import { computed, ref, watch, onUnmounted } from "vue";
 import { z } from "zod";
+import PalaceIdLogo from "@assets/images/palace-id.png";
+import BaglioniLogoSm from "@assets/svg/logos-sm/baglioni-resorts.svg";
+import PalaceEliteLogoSm from "@assets/svg/logos-sm/palace-elite.svg";
+import LeBlancLogoSm from "@assets/svg/logos-sm/le-blanc.svg";
+import PalaceResortsLogoSm from "@assets/svg/logos-sm/palace-resorts.svg";
+
+const brands = [
+  { logo: PalaceResortsLogoSm, name: "Palace Resorts" },
+  { logo: LeBlancLogoSm, name: "Le Blanc" },
+  { logo: BaglioniLogoSm, name: "Baglioni" },
+  { logo: PalaceEliteLogoSm, name: "Palace Elite" },
+];
 
 const registerFormSchema = registerDataSchema
   .extend({
@@ -50,11 +58,15 @@ const { handleSubmit, errors } = useForm({
 type StepType = "email" | "password" | "otp";
 const step = ref<StepType>("email");
 
+const MAX_OTP_ATTEMPTS = 3;
+const OTP_EXPIRY_TIME = 300; // 5 minutes in seconds
+
 const otp = ref();
 const otpInput = ref();
 const isValidatingOtp = ref(false);
 const otpError = ref(false);
-const otpTimeRemaining = ref(300);
+const otpAttempts = ref(0);
+const otpTimeRemaining = ref(OTP_EXPIRY_TIME);
 let otpTimerInterval: ReturnType<typeof setInterval> | null = null;
 
 const email = useField<string>("email");
@@ -63,10 +75,19 @@ const lastName = useField<string>("lastName");
 const password = useField<string>("password");
 const passwordConfirm = useField<string>("passwordConfirm");
 
-const registerProgress = computed(() => {
-  if (step.value === "email") return 25;
-  if (step.value === "password") return 50;
-  return 75;
+const isStep1Valid = computed(() => {
+  return (
+    !email.errorMessage.value &&
+    !firstName.errorMessage.value &&
+    !lastName.errorMessage.value &&
+    email.value.value.length > 0 &&
+    firstName.value.value.length > 0 &&
+    lastName.value.value.length > 0
+  );
+});
+
+const isStep2Valid = computed(() => {
+  return !password.errorMessage.value && !passwordConfirm.errorMessage.value;
 });
 
 const passwordValidations = computed(() => {
@@ -90,18 +111,34 @@ const passwordStrength = computed(() => {
   const completed = validations.filter(Boolean).length;
 
   if (completed === 0) {
-    return { label: "", color: "" };
+    return { label: "", color: "", bgColor: "" };
   }
   if (completed <= 1) {
-    return { label: "Débil", color: "text-tpc-fg-negative" };
+    return {
+      label: "Weak",
+      color: "text-tpc-fg-danger",
+      bgColor: "var(--color-bg-danger)",
+    };
   }
   if (completed === 2) {
-    return { label: "Media", color: "text-tpc-fg-warning" };
+    return {
+      label: "Regular",
+      color: "text-tpc-fg-warning",
+      bgColor: "var(--color-bg-warning)",
+    };
   }
   if (completed === 3) {
-    return { label: "Buena", color: "text-tpc-fg-info" };
+    return {
+      label: "Regular",
+      color: "text-tpc-fg-warning",
+      bgColor: "var(--color-bg-warning)",
+    };
   }
-  return { label: "Fuerte", color: "text-tpc-fg-positive" };
+  return {
+    label: "Strong",
+    color: "text-tpc-fg-positive",
+    bgColor: "var(--color-bg-positive)",
+  };
 });
 
 const otpTimeFormatted = computed(() => {
@@ -110,10 +147,32 @@ const otpTimeFormatted = computed(() => {
   return `${minutes.toString().padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`;
 });
 
+const maskedEmail = computed(() => {
+  const emailValue = email.value.value;
+  if (!emailValue) return "";
+
+  const [localPart, domain] = emailValue.split("@");
+  if (!domain) return emailValue;
+
+  const visibleChars = Math.min(1, localPart.length);
+  const masked = localPart.slice(0, visibleChars) + "***";
+
+  return `${masked}@${domain}`;
+});
+
+const hasMaxAttemptsReached = computed(() => {
+  return otpAttempts.value >= MAX_OTP_ATTEMPTS;
+});
+
+const remainingAttempts = computed(() => {
+  return MAX_OTP_ATTEMPTS - otpAttempts.value;
+});
+
 // Start OTP timer when step changes to 'otp'
 watch(step, (newStep) => {
   if (newStep === "otp") {
-    otpTimeRemaining.value = 300;
+    otpTimeRemaining.value = OTP_EXPIRY_TIME;
+    otpAttempts.value = 0;
     if (otpTimerInterval) {
       clearInterval(otpTimerInterval);
     }
@@ -155,13 +214,7 @@ const proceedToPassword = async () => {
   await firstName.validate();
   await lastName.validate();
 
-  // Check if any step 1 field has errors
-  const hasErrors =
-    !!email.errorMessage.value ||
-    !!firstName.errorMessage.value ||
-    !!lastName.errorMessage.value;
-
-  if (hasErrors) {
+  if (!isStep1Valid.value) {
     return;
   }
 
@@ -173,11 +226,7 @@ const proceedToOtp = async () => {
   await password.validate();
   await passwordConfirm.validate();
 
-  // Check if any password field has errors
-  const hasErrors =
-    !!password.errorMessage.value || !!passwordConfirm.errorMessage.value;
-
-  if (hasErrors) {
+  if (!isStep2Valid.value) {
     return;
   }
 
@@ -186,6 +235,11 @@ const proceedToOtp = async () => {
 
 const validateOtp = async () => {
   if (!otp.value?.length || otp.value.length !== 4) {
+    return;
+  }
+
+  // Check if max attempts reached
+  if (otpAttempts.value >= MAX_OTP_ATTEMPTS) {
     return;
   }
 
@@ -201,6 +255,7 @@ const validateOtp = async () => {
   const isValid = Math.random() > 0.1;
 
   if (!isValid) {
+    otpAttempts.value++;
     otpError.value = true;
     otp.value = "";
     return;
@@ -216,7 +271,8 @@ const validateOtp = async () => {
 const resendOtp = () => {
   otp.value = "";
   otpError.value = false;
-  otpTimeRemaining.value = 300;
+  otpAttempts.value = 0; // Reset attempts on resend
+  otpTimeRemaining.value = OTP_EXPIRY_TIME;
 
   // Clear and restart timer
   if (otpTimerInterval) {
@@ -236,63 +292,67 @@ const resendOtp = () => {
 
 <template>
   <div key="register" class="flex flex-col h-full max-w-md mx-auto">
-    <div class="flex justify-between items-center gap-2 px-6 py-2">
+    <div class="flex justify-between items-center gap-2 h-14 px-6 py-2">
       <Icon icon="IconX" />
-      <h2 class="tpc-typography-label-m text-tpc-fg-default">Registrarse</h2>
+      <h2 class="tpc-typography-label-m bg text-tpc-fg-default">Sign up</h2>
       <div />
     </div>
 
-    <div class="px-8 pb-8 pt-2 relative flex-1 flex flex-col">
-      <ProgressBar class="mb-6" mode="determinate" :value="registerProgress" />
+    <div class="px-8 pb-8 relative flex-1 flex flex-col">
+      <div class="flex justify-center gap-2 mb-6">
+        <div
+          class="rounded-full h-1.5 w-17"
+          :class="
+            step === 'email' ? 'bg-tpc-bg-accent' : 'bg-tpc-bg-neutral-weak'
+          "
+        />
+        <div
+          class="rounded-full h-1.5 w-17"
+          :class="
+            step === 'password' ? 'bg-tpc-bg-accent' : 'bg-tpc-bg-neutral-weak'
+          "
+        />
+        <div
+          class="rounded-full h-1.5 w-17"
+          :class="
+            step === 'otp' ? 'bg-tpc-bg-accent' : 'bg-tpc-bg-neutral-weak'
+          "
+        />
+      </div>
 
       <Transition name="slide" mode="out-in">
         <!-- Step 1: Email & Names -->
         <article
           v-if="step === 'email'"
           key="email"
-          class="pt-3 flex-1 flex flex-col"
+          class="pt-8 flex-1 flex flex-col gap-8"
         >
-          <div class="space-y-2 mb-8">
+          <div
+            class="mx-auto p-0.5 rounded-full flex items-center justify-center"
+            style="background: linear-gradient(to right, #1c6cc7, #03b9ff)"
+          >
+            <div
+              class="bg-tpc-bg-default rounded-full p-3 flex items-center justify-center"
+            >
+              <img
+                :src="PalaceIdLogo.src"
+                alt="Palace id logo"
+                class="w-auto h-auto"
+              />
+            </div>
+          </div>
+
+          <div class="space-y-2 mb-8 text-center">
             <h2 class="tpc-typography-title-m text-tpc-fg-default">
-              Crea tu Palace ID
+              Create your account
             </h2>
             <p class="tpc-typography-body-m text-tpc-fg-default">
-              Inicia sesión y administra los servicios de nuestras marcas desde
-              la misma cuenta.
+              Palace ID allows you to log in and manage the services of all our
+              brands from the same account.
             </p>
           </div>
 
-          <div class="flex justify-between mb-8">
-            <img
-              :src="PalaceResortsLogo.src"
-              alt="Palace Resorts Logo"
-              class="w-auto h-auto max-w-[22%] object-contain"
-            />
-            <img
-              :src="MoonPalaceLogo.src"
-              alt="Moon Palace Logo"
-              class="w-auto h-auto max-w-[22%] object-contain"
-            />
-            <img
-              :src="LeBlancLogo.src"
-              alt="Le Blanc Logo"
-              class="w-auto h-auto max-w-[22%] object-contain"
-            />
-            <img
-              :src="BaglioniResortsLogo.src"
-              alt="Baglioni Resorts Logo"
-              class="w-auto h-auto max-w-[22%] object-contain"
-            />
-          </div>
-
-          <div class="mb-8">
-            <Divider layout="horizontal" />
-          </div>
-
-          <div
-            class="flex flex-col gap-4 flex-1 justify-between"
-            @submit.prevent="onSubmit"
-          >
+          <div class="flex flex-col gap-6" @submit.prevent="onSubmit">
             <div class="flex flex-col gap-4">
               <!-- Email -->
               <FormField>
@@ -302,9 +362,9 @@ const resendOtp = () => {
                     v-model="email.value.value"
                     :invalid="!!email.errorMessage.value"
                   />
-                  <InputLabel label-value="email" for="Correo electronico" />
+                  <InputLabel label-value="Email" for="Correo electronico" />
                 </FloatLabel>
-                <Message v-if="errors.email" severity="neutral">
+                <Message v-if="errors.email" severity="danger">
                   {{ errors.email }}
                 </Message>
               </FormField>
@@ -317,9 +377,9 @@ const resendOtp = () => {
                     v-model="firstName.value.value"
                     :invalid="!!firstName.errorMessage.value"
                   />
-                  <InputLabel label-value="Nombre" for="firstName" />
+                  <InputLabel label-value="Full name" for="firstName" />
                 </FloatLabel>
-                <Message v-if="errors.firstName" severity="neutral">
+                <Message v-if="errors.firstName" severity="danger">
                   {{ errors.firstName }}
                 </Message>
               </FormField>
@@ -332,9 +392,9 @@ const resendOtp = () => {
                     v-model="lastName.value.value"
                     :invalid="!!lastName.errorMessage.value"
                   />
-                  <InputLabel label-value="Apellido/s" for="lastName" />
+                  <InputLabel label-value="Last name(s)" for="lastName" />
                 </FloatLabel>
-                <Message v-if="errors.lastName" severity="neutral">
+                <Message v-if="errors.lastName" severity="danger">
                   {{ errors.lastName }}
                 </Message>
               </FormField>
@@ -345,10 +405,28 @@ const resendOtp = () => {
               type="button"
               severity="primary"
               size="large"
+              :disabled="!isStep1Valid"
               @click="proceedToPassword"
             >
-              Continuar
+              Continue
             </Button>
+          </div>
+
+          <Divider layout="horizontal" />
+
+          <div class="flex mx-auto gap-5">
+            <div
+              v-for="brand in brands"
+              :key="brand.name"
+              class="flex flex-col items-center text-center gap-2"
+            >
+              <div class="w-10 h-10 flex items-center justify-center">
+                <img :src="brand.logo.src" :alt="`${brand.name} logo`" />
+              </div>
+              <span class="tpc-typography-body-xs text-tpc-fg-default">
+                {{ brand.name }}
+              </span>
+            </div>
           </div>
         </article>
 
@@ -356,15 +434,15 @@ const resendOtp = () => {
         <article
           v-else-if="step === 'password'"
           key="password"
-          class="pt-3 flex-1 flex flex-col justify-between"
+          class="pt-8 flex-1 flex flex-col justify-between"
         >
           <div class="flex flex-col">
-            <div class="space-y-2 mb-8">
+            <div class="space-y-2 mb-8 text-center">
               <h2 class="tpc-typography-title-m text-tpc-fg-default">
-                Crea tu contraseña
+                Create your password
               </h2>
               <p class="tpc-typography-body-m text-tpc-fg-default">
-                Define una contraseña segura para mantener tu cuenta segura.
+                Define a secure password to keep your account safe.
               </p>
             </div>
 
@@ -384,12 +462,12 @@ const resendOtp = () => {
             </FormField>
 
             <div
-              class="rounded-tpc-container-s bg-tpc-bg-alternative mt-3 p-4 flex flex-col justify-between mb-8"
+              class="rounded-tpc-container-s bg-tpc-bg-alternative mt-3 p-4 flex flex-col justify-between mb-6"
             >
               <div>
                 <div class="flex justify-between items-center">
                   <p class="tpc-typography-label-s text-tpc-fg-default">
-                    Elige una contraseña
+                    Choose a password
                   </p>
                   <p
                     v-if="passwordStrength.label"
@@ -401,9 +479,12 @@ const resendOtp = () => {
                 </div>
 
                 <ProgressBar
-                  class="mb-6"
+                  class="mb-6 password-strength-bar"
                   mode="determinate"
                   :value="passwordProgress"
+                  :style="{
+                    '--password-strength-color': passwordStrength.bgColor,
+                  }"
                 />
               </div>
 
@@ -418,7 +499,7 @@ const resendOtp = () => {
                         : 'IconCircleCheck'
                     "
                   />
-                  <span>Al menos 8 caracteres</span>
+                  <span>At least 8 characters</span>
                 </div>
                 <div class="flex gap-2 items-center">
                   <Icon
@@ -428,7 +509,7 @@ const resendOtp = () => {
                         : 'IconCircleCheck'
                     "
                   />
-                  <span>Una letra mayúscula</span>
+                  <span>One uppercase letter</span>
                 </div>
                 <div class="flex gap-2 items-center">
                   <Icon
@@ -438,7 +519,7 @@ const resendOtp = () => {
                         : 'IconCircleCheck'
                     "
                   />
-                  <span>Un número</span>
+                  <span>One number</span>
                 </div>
                 <div class="flex gap-2 items-center">
                   <Icon
@@ -448,7 +529,7 @@ const resendOtp = () => {
                         : 'IconCircleCheck'
                     "
                   />
-                  <span>Un carácter especial</span>
+                  <span>One special character</span>
                 </div>
               </div>
             </div>
@@ -471,7 +552,7 @@ const resendOtp = () => {
               </FloatLabel>
               <Message
                 v-if="passwordConfirm.errorMessage.value"
-                severity="neutral"
+                severity="danger"
               >
                 {{ passwordConfirm.errorMessage.value }}
               </Message>
@@ -479,17 +560,21 @@ const resendOtp = () => {
           </div>
 
           <div class="flex flex-col gap-5">
-            <p class="tpc-typography-body-s text-tpc-fg-default text-center">
-              Al crear un ID de Palace, aceptas nuestros Términos de uso y
-              Política de privacidad
+            <p
+              class="tpc-typography-body-s text-tpc-fg-default text-center px-4"
+            >
+              By creating a Palace ID, you agree to our
+              <span class="underline">Terms of Use</span> and
+              <span class="underline">Privacy Policy</span>
             </p>
             <Button
               class="rounded-full"
               severity="primary"
               size="large"
+              :disabled="!isStep2Valid"
               @click="proceedToOtp"
             >
-              Continuar
+              Create my palace ID
             </Button>
           </div>
         </article>
@@ -498,15 +583,15 @@ const resendOtp = () => {
         <article
           v-else-if="step === 'otp'"
           key="otp"
-          class="pt-3 flex-1 flex flex-col justify-between"
+          class="pt-8 flex-1 flex flex-col justify-between"
         >
           <div>
-            <div class="space-y-2 mb-8">
+            <div class="space-y-2 mb-8 text-center px-4">
               <h2 class="tpc-typography-title-m text-tpc-fg-default">
-                Verifica tu email
+                Verify your email
               </h2>
               <p class="tpc-typography-body-m text-tpc-fg-default">
-                Ingresa el código de 4 dígitos que enviamos a j***doe@gmail.com
+                Enter the 4-digit code we sent to {{ maskedEmail }}
               </p>
             </div>
 
@@ -514,6 +599,7 @@ const resendOtp = () => {
               <InputOtp
                 ref="otpInput"
                 v-model="otp"
+                :disabled="hasMaxAttemptsReached"
                 @update:model-value="validateOtp"
               />
 
@@ -521,32 +607,70 @@ const resendOtp = () => {
                 v-if="isValidatingOtp"
                 class="flex items-center gap-2 tpc-typography-body-m text-tpc-fg-default"
               >
-                <ProgressSpinner class="mare:w-5 mare:h-5" />
-                Validando...
+                <ProgressSpinner
+                  class="mare:w-5 mare:h-5"
+                  style="
+                    color: var(--color-fg-accent);
+                    stroke: var(--color-fg-accent);
+                  "
+                />
+                Validating...
               </div>
 
               <Banner
-                v-if="otpError"
+                v-if="otpError && !hasMaxAttemptsReached"
                 severity="danger"
                 class="text-tpc-fg-danger"
               >
                 <div class="flex gap-4 items-center">
                   <Icon icon="IconAlertCircle" class="text-tpc-fg-danger" />
                   <p class="tpc-typography-body-xs text-tpc-fg-danger">
-                    Codigo incorrecto. 3 intentos restantes.
+                    Incorrect code. {{ remainingAttempts }}
+                    {{ remainingAttempts === 1 ? "attempt" : "attempts" }}
+                    remaining.
                   </p>
                 </div>
               </Banner>
 
-              <p class="tpc-typography-body-m text-tpc-fg-default">
-                El codigo expira en
+              <Banner
+                v-if="hasMaxAttemptsReached"
+                severity="danger"
+                class="text-tpc-fg-danger"
+              >
+                <div class="flex gap-4 items-center">
+                  <Icon icon="IconAlertCircle" class="text-tpc-fg-danger" />
+                  <p class="tpc-typography-body-xs text-tpc-fg-danger">
+                    Too many attempts. Please request a new code or try again
+                    later.
+                  </p>
+                </div>
+              </Banner>
+
+              <p
+                v-if="otpTimeRemaining === 0 && !isValidatingOtp"
+                class="tpc-typography-body-xs text-tpc-fg-danger"
+              >
+                Code expired
+              </p>
+
+              <p
+                v-else-if="!isValidatingOtp"
+                class="tpc-typography-body-m text-tpc-fg-default"
+              >
+                The code expires in
                 {{ otpTimeFormatted }}
               </p>
             </div>
           </div>
 
           <div class="flex justify-center">
-            <Button label="Reenviar codigo" link @click="resendOtp" />
+            <Button
+              :label="
+                otpTimeRemaining === 0 ? 'Request a new code' : 'Resend code'
+              "
+              link
+              @click="resendOtp"
+            />
           </div>
         </article>
       </Transition>
@@ -568,5 +692,9 @@ const resendOtp = () => {
 .slide-leave-to {
   transform: translateX(-100%);
   opacity: 0;
+}
+
+.password-strength-bar :deep(.mare\:bg-tpc-bg-accent) {
+  background-color: var(--password-strength-color) !important;
 }
 </style>

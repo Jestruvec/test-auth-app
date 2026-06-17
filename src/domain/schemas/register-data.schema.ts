@@ -2,25 +2,25 @@ import { z } from "zod";
 
 export const registerDataSchema = z.object({
   email: z
-    .email({ message: "Email es requerido" })
-    .min(1, "Email es requerido"),
+    .email({ message: "Enter a valid email address" })
+    .min(1, "Email is required"),
   password: z
-    .string({ message: "Contraseña es requerida" })
-    .min(8, "La contraseña debe tener al menos 8 caracteres")
-    .regex(/[A-Z]/, "Debe contener al menos una mayúscula")
-    .regex(/[0-9]/, "Debe contener al menos un número")
+    .string({ message: "Password is required" })
+    .min(8, "Password must be at least 8 characters")
+    .regex(/[A-Z]/, "Must contain at least one uppercase letter")
+    .regex(/[0-9]/, "Must contain at least one number")
     .regex(
       /[!@#$%^&*(),.?":{}|<>]/,
-      "Debe contener al menos un carácter especial"
+      "Must contain at least one special character"
     ),
   firstName: z
-    .string({ message: "Nombre es requerido" })
-    .min(2, "El nombre debe tener al menos 2 caracteres")
-    .max(50, "El nombre no puede exceder 50 caracteres"),
+    .string({ message: "First name is required" })
+    .min(2, "First name must be at least 2 characters")
+    .max(50, "First name cannot exceed 50 characters"),
   lastName: z
-    .string({ message: "Apellido es requerido" })
-    .min(2, "El apellido debe tener al menos 2 caracteres")
-    .max(50, "El apellido no puede exceder 50 caracteres"),
+    .string({ message: "Last name is required" })
+    .min(2, "Last name must be at least 2 characters")
+    .max(50, "Last name cannot exceed 50 characters"),
 });
 
 export type RegisterDataInput = z.infer<typeof registerDataSchema>;
