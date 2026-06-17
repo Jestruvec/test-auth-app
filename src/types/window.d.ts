@@ -6,7 +6,7 @@
 /**
  * Available navigation routes
  */
-type NavigationRoute = "register" | "login" | "faceid" | "notification";
+type NavigationRoute = "landing" | "faceid" | "notification";
 
 /**
  * Event detail types for type-safe event handling

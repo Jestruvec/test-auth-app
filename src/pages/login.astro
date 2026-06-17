@@ -1,0 +1,10 @@
+---
+import Layout from "@/layouts/layout.astro";
+import LoginForm from "@/components/login-form.vue";
+---
+
+<Layout>
+  <div id="login-form" class="fixed inset-0 z-40 bg-tpc-bg-default">
+    <LoginForm client:only="vue" />
+  </div>
+</Layout>

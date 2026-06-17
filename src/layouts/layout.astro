@@ -17,6 +17,19 @@ import "@/assets/styles/index.css";
   </body>
 </html>
 
+<style is:global>
+  body {
+    opacity: 0;
+    animation: fadeIn 0.5s ease-in forwards;
+  }
+
+  @keyframes fadeIn {
+    to {
+      opacity: 1;
+    }
+  }
+</style>
+
 <script is:inline>
   /**
    * PalaceApp - Global namespace and event bus
@@ -50,6 +63,20 @@ import "@/assets/styles/index.css";
      */
     off(event, callback) {
       window.removeEventListener(`palace:${event}`, callback);
+    },
+
+    /**
+     * Navigate with fade transition
+     * @param {string} url - URL to navigate to
+     */
+    navigate(url) {
+      const body = document.body;
+      body.style.transition = 'opacity 0.5s';
+      body.style.opacity = '0';
+
+      setTimeout(() => {
+        window.location.href = url;
+      }, 500);
     }
   };
 </script>

@@ -124,11 +124,11 @@ const contentSlides = [
   // Navigation event listeners
   // ============================================================
   document.getElementById("register-btn")?.addEventListener("click", () => {
-    window.PalaceApp.emit("navigate", { to: "register" });
+    window.PalaceApp.navigate("/register");
   });
 
   document.getElementById("login-btn")?.addEventListener("click", () => {
-    window.PalaceApp.emit("navigate", { to: "login" });
+    window.PalaceApp.navigate("/login");
   });
 
   // ============================================================

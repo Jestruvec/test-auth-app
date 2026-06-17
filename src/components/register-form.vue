@@ -19,7 +19,7 @@ import {
 import { registerDataSchema } from "@/domain/schemas/register-data.schema";
 import { computed, ref, watch, onUnmounted } from "vue";
 import { z } from "zod";
-import PalaceIdLogo from "@assets/images/palace-id.png";
+import PalaceIdLogo from "./palace-id-logo.vue";
 import BaglioniLogoSm from "@assets/svg/logos-sm/baglioni-resorts.svg";
 import PalaceEliteLogoSm from "@assets/svg/logos-sm/palace-elite.svg";
 import LeBlancLogoSm from "@assets/svg/logos-sm/le-blanc.svg";
@@ -288,14 +288,18 @@ const resendOtp = () => {
     }
   }, 1000);
 };
+
+const closeRegistration = () => {
+  window.location.assign("/");
+};
 </script>
 
 <template>
   <div key="register" class="flex flex-col h-full max-w-md mx-auto">
     <div class="flex justify-between items-center gap-2 h-14 px-6 py-2">
-      <div class="w-5 h-5">
+      <button class="w-5 h-5" @click="closeRegistration">
         <Icon icon="IconX" />
-      </div>
+      </button>
       <h2 class="tpc-typography-label-m bg text-tpc-fg-default">Sign up</h2>
       <div />
     </div>
@@ -329,20 +333,7 @@ const resendOtp = () => {
           key="email"
           class="pt-8 flex-1 flex flex-col gap-8"
         >
-          <div
-            class="mx-auto p-0.5 rounded-full flex items-center justify-center w-22 h-10"
-            style="background: linear-gradient(to right, #1c6cc7, #03b9ff)"
-          >
-            <div
-              class="bg-tpc-bg-default rounded-full p-3 flex items-center justify-center"
-            >
-              <img
-                :src="PalaceIdLogo.src"
-                alt="Palace id logo"
-                class="w-auto h-auto"
-              />
-            </div>
-          </div>
+          <PalaceIdLogo />
 
           <div class="space-y-2 mb-8 text-center">
             <h2 class="tpc-typography-title-m text-tpc-fg-default">

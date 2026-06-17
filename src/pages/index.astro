@@ -1,15 +1,15 @@
 ---
 import SplashScreen from "@/components/splash-screen.astro";
 import LandingScreen from "@/components/landing-screen.astro";
-import CompleteScreen from "@/components/complete-screen.astro";
-import FaceIdScreen from "@/components/face-id-screen.astro";
-import NotificationScreen from "@/components/notification-screen.astro";
 
 import Layout from "@/layouts/layout.astro";
 ---
 
 <Layout>
-  <div id="splash" class="fixed inset-0 z-50 transition-opacity duration-500">
+  <div
+    id="splash"
+    class="fixed inset-0 z-50 transition-opacity duration-500"
+  >
     <SplashScreen />
   </div>
   <div
@@ -18,172 +18,28 @@ import Layout from "@/layouts/layout.astro";
   >
     <LandingScreen />
   </div>
-  <div
-    id="complete"
-    class="fixed inset-0 z-30 opacity-0 pointer-events-none"
-    style="transition: transform 0.5s ease-in-out; transform: translateX(100%);"
-  >
-    <CompleteScreen />
-  </div>
-  <div
-    id="faceid"
-    class="fixed inset-0 z-20 opacity-0 pointer-events-none"
-    style="transition: transform 0.5s ease-in-out; transform: translateX(100%);"
-  >
-    <FaceIdScreen />
-  </div>
-  <div
-    id="notification"
-    class="fixed inset-0 z-15 opacity-0 pointer-events-none"
-    style="transition: transform 0.5s ease-in-out; transform: translateX(100%);"
-  >
-    <NotificationScreen />
-  </div>
-  <div
-    id="register-container"
-    class="fixed inset-0 z-10 opacity-0 transition-opacity duration-500 pointer-events-none"
-  >
-  </div>
 </Layout>
 
 <script>
-  let registerFormMounted = false;
+  // Animation timing constants
+  const SPLASH_DURATION = 2000;
 
   // Screen references
-  const getScreens = () => ({
-    splash: document.getElementById("splash"),
-    landing: document.getElementById("landing"),
-    complete: document.getElementById("complete"),
-    faceid: document.getElementById("faceid"),
-    notification: document.getElementById("notification"),
-    registerContainer: document.getElementById("register-container"),
-  });
+  const splash = document.getElementById("splash");
+  const landing = document.getElementById("landing");
 
-  // Track current active screen
-  let currentScreen: HTMLElement | null = null;
-
-  // Utility function to transition between screens
-  const transitionToScreen = (
-    fromScreen: HTMLElement | null,
-    toScreen: HTMLElement | null,
-    slideDirection?: "left" | "right"
-  ) => {
-    if (!toScreen) return;
-
-    // Hide all screens first
-    const allScreens = Object.values(getScreens()).filter(
-      (s): s is HTMLElement => s !== null
-    );
-    allScreens.forEach((screen) => {
-      if (screen !== toScreen) {
-        screen.style.pointerEvents = "none";
-        // Only hide non-slide screens with opacity
-        if (!["complete", "faceid", "notification"].includes(screen.id || "")) {
-          screen.style.opacity = "0";
-          screen.style.transform = "";
-        }
-      }
-    });
-
-    // Show target screen
-    toScreen.style.display = "block";
-    toScreen.style.pointerEvents = "auto";
-
-    // Apply slide animation if specified
-    if (slideDirection === "right") {
-      // Ensure entering screen is on top
-      toScreen.style.zIndex = "100";
-
-      // Start from right
-      toScreen.style.transform = "translateX(100%)";
-      toScreen.style.opacity = "1";
-
-      // Animate to center
-      requestAnimationFrame(() => {
-        toScreen.style.transform = "translateX(0)";
-      });
-
-      // Reset z-index after animation
-      setTimeout(() => {
-        toScreen.style.zIndex = "";
-      }, 500);
-    } else {
-      // Default fade transition
-      toScreen.style.transform = "";
-      toScreen.style.opacity = "1";
-    }
-
-    // Hide previous screens from DOM after transition
-    setTimeout(() => {
-      allScreens.forEach((screen) => {
-        if (screen !== toScreen) {
-          screen.style.display = "none";
-        }
-      });
-    }, 500);
-
-    currentScreen = toScreen;
-  };
-  // Mount Vue register form on demand
-  const mountRegisterForm = async () => {
-    const { registerContainer } = getScreens();
-    if (!registerContainer || registerFormMounted) return;
-
-    const [{ createApp }, { MareComponentsPlugin }, { default: RegisterForm }] =
-      await Promise.all([
-        import("vue"),
-        import("@tpc-development/mare-ui-components"),
-        import("../components/register-form.vue"),
-      ]);
-
-    const mareConfig = {
-      productId: "app",
-      applicationId: "astro-app",
-    };
-
-    const app = createApp(RegisterForm);
-    app.use(MareComponentsPlugin, mareConfig);
-    app.mount(registerContainer);
-    registerFormMounted = true;
-  };
-
-  const screens = getScreens();
-
-  // Initial splash screen transition
+  // Transition from splash to landing
   setTimeout(() => {
-    transitionToScreen(screens.splash, screens.landing);
-  }, 2000);
+    if (splash && landing) {
+      splash.style.opacity = "0";
+      splash.style.pointerEvents = "none";
 
-  // Listen for navigation events from child components
-  window.PalaceApp.on("navigate", async (e: Event) => {
-    const event = e as CustomEvent<{ to: string }>;
-    const { to } = event.detail;
-    const screens = getScreens();
+      landing.style.opacity = "1";
+      landing.style.pointerEvents = "auto";
 
-    switch (to) {
-      case "register":
-        await mountRegisterForm();
-        transitionToScreen(screens.landing, screens.registerContainer);
-        break;
-
-      case "login":
-        // TODO: Implement login flow
-        console.log("Navigate to login");
-        break;
-
-      case "faceid":
-        transitionToScreen(screens.complete, screens.faceid, "right");
-        break;
-
-      case "notification":
-        transitionToScreen(screens.faceid, screens.notification, "right");
-        break;
+      setTimeout(() => {
+        splash.style.display = "none";
+      }, 500);
     }
-  });
-
-  // Listen for registration complete event from Vue component
-  window.PalaceApp.on("registration-complete", () => {
-    const screens = getScreens();
-    transitionToScreen(screens.registerContainer, screens.complete, "right");
-  });
+  }, SPLASH_DURATION);
 </script>
