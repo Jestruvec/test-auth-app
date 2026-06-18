@@ -15,38 +15,78 @@ import type { LoginCredentials } from "@/domain/types/login-credentials";
 import type { AuthSession } from "@/domain/types/auth-session";
 import { USER_ROLES } from "@/domain/types/user-role";
 
-function handleAmplifyError(error: unknown): Error {
+export interface AuthError extends Error {
+  code: string;
+}
+
+function createAuthError(message: string, code: string): AuthError {
+  const error = new Error(message) as AuthError;
+  error.code = code;
+  return error;
+}
+
+function handleAmplifyError(error: unknown): AuthError {
+  // Si ya es un AuthError, retornarlo directamente
+  if (
+    error instanceof Error &&
+    "code" in error &&
+    typeof (error as AuthError).code === "string"
+  ) {
+    return error as AuthError;
+  }
+
   const errorState = error as { message?: string; name?: string };
   const errorMessage = errorState.message ?? "Error desconocido";
   const errorName = errorState.name ?? "";
 
   switch (errorName) {
     case "UsernameExistsException": {
-      return new Error("Este email ya está registrado");
+      return createAuthError(
+        "Este email ya está registrado",
+        "UsernameExistsException"
+      );
     }
     case "UserNotFoundException": {
-      return new Error("Usuario no encontrado");
+      return createAuthError("Usuario no encontrado", "UserNotFoundException");
     }
     case "NotAuthorizedException": {
-      return new Error("Email o contraseña incorrectos");
+      return createAuthError(
+        "Email o contraseña incorrectos",
+        "NotAuthorizedException"
+      );
     }
     case "CodeMismatchException": {
-      return new Error("Código de verificación incorrecto");
+      return createAuthError(
+        "Código de verificación incorrecto",
+        "CodeMismatchException"
+      );
     }
     case "ExpiredCodeException": {
-      return new Error("El código de verificación ha expirado");
+      return createAuthError(
+        "El código de verificación ha expirado",
+        "ExpiredCodeException"
+      );
     }
     case "InvalidPasswordException": {
-      return new Error("La contraseña no cumple los requisitos de seguridad");
+      return createAuthError(
+        "La contraseña no cumple los requisitos de seguridad",
+        "InvalidPasswordException"
+      );
     }
     case "LimitExceededException": {
-      return new Error("Demasiados intentos. Intenta más tarde");
+      return createAuthError(
+        "Demasiados intentos. Intenta más tarde",
+        "LimitExceededException"
+      );
     }
     case "UserNotConfirmedException": {
-      return new Error("Debes verificar tu email antes de iniciar sesión");
+      return createAuthError(
+        "Debes verificar tu email antes de iniciar sesión",
+        "UserNotConfirmedException"
+      );
     }
     default: {
-      return new Error(errorMessage);
+      return createAuthError(errorMessage, errorName);
     }
   }
 }
@@ -56,16 +96,22 @@ export const amplifyAuthRepository: IAuthRepository = {
     data: RegisterData
   ): Promise<{ userId: string; email: string }> {
     try {
+      const userAttributes: Record<string, string> = {
+        email: data.email,
+        given_name: data.firstName,
+        family_name: data.lastName,
+      };
+
+      // Only include phone_number if provided
+      if (data.phone) {
+        userAttributes.phone_number = data.phone;
+      }
+
       const { userId } = await signUp({
         username: data.email,
         password: data.password,
         options: {
-          userAttributes: {
-            email: data.email,
-            given_name: data.firstName,
-            family_name: data.lastName,
-            phone_number: data.phone,
-          },
+          userAttributes,
         },
       });
 
@@ -107,6 +153,12 @@ export const amplifyAuthRepository: IAuthRepository = {
       });
 
       if (!isSignedIn) {
+        if (nextStep.signInStep === "CONFIRM_SIGN_UP") {
+          throw createAuthError(
+            "Debes verificar tu email antes de iniciar sesión",
+            "UserNotConfirmedException"
+          );
+        }
         throw new Error(`Login incompleto: ${nextStep.signInStep}`);
       }
 

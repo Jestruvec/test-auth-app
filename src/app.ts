@@ -4,6 +4,7 @@ import {
   type MareComponentsPluginOptions,
 } from "@tpc-development/mare-ui-components";
 import Aura from "@primeuix/themes/aura";
+import { initializeAmplify } from "@/infrastructure/auth/amplify.config";
 
 const primeConfig = {
   ripple: true,
@@ -22,6 +23,9 @@ const mareConfig: MareComponentsPluginOptions = {
   applicationId: "astro-app",
   primevueConfig: primeConfig,
 };
+
+// Initialize Amplify before mounting Vue.js
+initializeAmplify();
 
 export default (app: App) => {
   app.use(MareComponentsPlugin, mareConfig);

@@ -1,5 +1,6 @@
 ---
-import FaceId from "../assets/images/face-id.png";
+import { Image } from "astro:assets";
+import FaceId from "@assets/images/face-id.png";
 ---
 
 <div class="h-full flex flex-col">
@@ -18,7 +19,7 @@ import FaceId from "../assets/images/face-id.png";
 					);
 				"
   >
-    <img src={FaceId.src} alt="face id" class="h-auto w-auto" />
+    <Image src={FaceId} alt="face id" class="h-auto w-auto" loading="lazy" />
   </div>
 
   <div class="bg-white h-[60%] p-8 flex flex-col gap-8 max-w-md mx-auto z-3">
@@ -60,7 +61,10 @@ import FaceId from "../assets/images/face-id.png";
       </div>
     </div>
     <div class="flex flex-col gap-5">
-      <button id="enable-faceid-btn" class="py-4 px-5.5 bg-[#183456] rounded-full text-white">
+      <button
+        id="enable-faceid-btn"
+        class="py-4 px-5.5 bg-[#183456] rounded-full text-white"
+      >
         Habilitar Face ID
       </button>
       <button id="skip-faceid-btn" class="underline"> Omitir por ahora </button>
@@ -69,11 +73,13 @@ import FaceId from "../assets/images/face-id.png";
 </div>
 
 <script>
-  document.getElementById('enable-faceid-btn')?.addEventListener('click', () => {
-    window.PalaceApp.emit('navigate', { to: 'notification' });
-  });
+  document
+    .getElementById("enable-faceid-btn")
+    ?.addEventListener("click", () => {
+      window.PalaceApp.emit("navigate", { to: "notification" });
+    });
 
-  document.getElementById('skip-faceid-btn')?.addEventListener('click', () => {
-    window.PalaceApp.emit('navigate', { to: 'notification' });
+  document.getElementById("skip-faceid-btn")?.addEventListener("click", () => {
+    window.PalaceApp.emit("navigate", { to: "notification" });
   });
 </script>

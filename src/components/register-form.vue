@@ -17,13 +17,15 @@ import {
   Banner,
 } from "@tpc-development/mare-ui-components";
 import { registerDataSchema } from "@/domain/schemas/register-data.schema";
-import { computed, ref, watch, onUnmounted } from "vue";
+import { computed, ref, watch } from "vue";
 import { z } from "zod";
 import PalaceIdLogo from "./palace-id-logo.vue";
 import BaglioniLogoSm from "@assets/svg/logos-sm/baglioni-resorts.svg";
 import PalaceEliteLogoSm from "@assets/svg/logos-sm/palace-elite.svg";
 import LeBlancLogoSm from "@assets/svg/logos-sm/le-blanc.svg";
 import PalaceResortsLogoSm from "@assets/svg/logos-sm/palace-resorts.svg";
+import { useAuth } from "@/composables/use-auth.ts";
+import { useSessionStorage, useIntervalFn, useTimeoutFn } from "@vueuse/core";
 
 const brands = [
   { logo: PalaceResortsLogoSm, name: "Palace Resorts" },
@@ -43,10 +45,10 @@ const registerFormSchema = registerDataSchema
 
 const registerSchema = toTypedSchema(registerFormSchema);
 
-const { handleSubmit, errors } = useForm({
+const { errors } = useForm({
   validationSchema: registerSchema,
   initialValues: {
-    email: "jondoe@gmail.com",
+    email: "jondoe@test.com",
     password: "Password123!",
     firstName: "Jon",
     lastName: "Doe",
@@ -55,11 +57,17 @@ const { handleSubmit, errors } = useForm({
   validateOnMount: false,
 });
 
+const { register, confirmEmail, resendCode, isLoading } = useAuth();
+
 type StepType = "email" | "password" | "otp";
 const step = ref<StepType>("email");
 
+const prefillEmail = useSessionStorage<string | null>("prefill-email", null);
+const otpEmail = useSessionStorage<string | null>("otp-email", null);
+
 const MAX_OTP_ATTEMPTS = 3;
-const OTP_EXPIRY_TIME = 300; // 5 minutes in seconds
+const OTP_EXPIRY_TIME = 300;
+const RESEND_COOLDOWN_TIME = 60; // 1 minuto de espera
 
 const otp = ref();
 const otpInput = ref();
@@ -67,7 +75,35 @@ const isValidatingOtp = ref(false);
 const otpError = ref(false);
 const otpAttempts = ref(0);
 const otpTimeRemaining = ref(OTP_EXPIRY_TIME);
-let otpTimerInterval: ReturnType<typeof setInterval> | null = null;
+const resendCooldown = ref(0);
+const showResendSuccess = ref(false);
+
+// OTP timer interval
+const { pause: pauseOtpTimer, resume: resumeOtpTimer } = useIntervalFn(
+  () => {
+    if (otpTimeRemaining.value > 0) {
+      otpTimeRemaining.value--;
+    } else {
+      pauseOtpTimer();
+    }
+  },
+  1000,
+  { immediate: false }
+);
+
+// Resend cooldown interval
+const { pause: pauseResendCooldown, resume: resumeResendCooldown } =
+  useIntervalFn(
+    () => {
+      if (resendCooldown.value > 0) {
+        resendCooldown.value--;
+      } else {
+        pauseResendCooldown();
+      }
+    },
+    1000,
+    { immediate: false }
+  );
 
 const email = useField<string>("email");
 const firstName = useField<string>("firstName");
@@ -147,6 +183,16 @@ const otpTimeFormatted = computed(() => {
   return `${minutes.toString().padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`;
 });
 
+const resendCooldownFormatted = computed(() => {
+  const minutes = Math.floor(resendCooldown.value / 60);
+  const seconds = resendCooldown.value % 60;
+  return `${minutes.toString().padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`;
+});
+
+const canResendCode = computed(() => {
+  return resendCooldown.value === 0;
+});
+
 const maskedEmail = computed(() => {
   const emailValue = email.value.value;
   if (!emailValue) return "";
@@ -168,48 +214,7 @@ const remainingAttempts = computed(() => {
   return MAX_OTP_ATTEMPTS - otpAttempts.value;
 });
 
-// Start OTP timer when step changes to 'otp'
-watch(step, (newStep) => {
-  if (newStep === "otp") {
-    otpTimeRemaining.value = OTP_EXPIRY_TIME;
-    otpAttempts.value = 0;
-    if (otpTimerInterval) {
-      clearInterval(otpTimerInterval);
-    }
-    otpTimerInterval = setInterval(() => {
-      if (otpTimeRemaining.value > 0) {
-        otpTimeRemaining.value--;
-      } else {
-        if (otpTimerInterval) {
-          clearInterval(otpTimerInterval);
-        }
-      }
-    }, 1000);
-  } else if (newStep === "password") {
-    // Clear password validation error when entering password step
-    password.resetField();
-  }
-
-  if (newStep !== "otp" && otpTimerInterval) {
-    clearInterval(otpTimerInterval);
-  }
-});
-
-onUnmounted(() => {
-  if (otpTimerInterval) {
-    clearInterval(otpTimerInterval);
-  }
-});
-
-const onSubmit = handleSubmit((values) => {
-  // Remove passwordConfirm before sending to API (it's UI-only)
-  //const { passwordConfirm: _, ...registerData } = values;
-  //register(registerData);
-  console.log(values);
-});
-
 const proceedToPassword = async () => {
-  // Validate only step 1 fields
   await email.validate();
   await firstName.validate();
   await lastName.validate();
@@ -222,7 +227,6 @@ const proceedToPassword = async () => {
 };
 
 const proceedToOtp = async () => {
-  // Validate password fields
   await password.validate();
   await passwordConfirm.validate();
 
@@ -230,11 +234,31 @@ const proceedToOtp = async () => {
     return;
   }
 
-  step.value = "otp";
+  const registerData = {
+    email: email.value.value,
+    firstName: firstName.value.value,
+    lastName: lastName.value.value,
+    password: password.value.value,
+  };
+
+  try {
+    const response = await register(registerData);
+    console.log(response);
+    step.value = "otp";
+  } catch (error: unknown) {
+    const authError = error as { code?: string; message?: string };
+
+    if (authError.code === "UsernameExistsException") {
+      prefillEmail.value = email.value.value;
+      window.location.assign("/login");
+    } else {
+      console.error(error);
+    }
+  }
 };
 
 const validateOtp = async () => {
-  if (!otp.value?.length || otp.value.length !== 4) {
+  if (!otp.value?.length || otp.value.length !== 6) {
     return;
   }
 
@@ -246,52 +270,93 @@ const validateOtp = async () => {
   otpError.value = false;
   isValidatingOtp.value = true;
 
-  // Simulate OTP validation with 2 second delay
-  await new Promise((resolve) => setTimeout(resolve, 2000));
+  try {
+    await confirmEmail(email.value.value, otp.value);
+    // Notify parent to show complete screen
+    window.PalaceApp.emit("registration-complete");
+  } catch (error) {
+    console.log(error);
 
-  isValidatingOtp.value = false;
-
-  // 50% chance of failure
-  const isValid = Math.random() > 0.1;
-
-  if (!isValid) {
     otpAttempts.value++;
     otpError.value = true;
     otp.value = "";
     return;
+  } finally {
+    isValidatingOtp.value = false;
   }
-
-  // OTP validated successfully, submit the form
-  await onSubmit();
-
-  // Notify parent to show complete screen
-  window.PalaceApp.emit("registration-complete");
 };
 
-const resendOtp = () => {
+const resendOtp = async () => {
+  if (!canResendCode.value) {
+    return;
+  }
+
   otp.value = "";
   otpError.value = false;
-  otpAttempts.value = 0; // Reset attempts on resend
+  otpAttempts.value = 0;
   otpTimeRemaining.value = OTP_EXPIRY_TIME;
 
-  // Clear and restart timer
-  if (otpTimerInterval) {
-    clearInterval(otpTimerInterval);
+  pauseOtpTimer();
+
+  try {
+    await resendCode(email.value.value);
+    showResendSuccess.value = true;
+
+    useTimeoutFn(() => {
+      showResendSuccess.value = false;
+    }, 5000);
+
+    resendCooldown.value = RESEND_COOLDOWN_TIME;
+    pauseResendCooldown();
+    resumeResendCooldown();
+  } catch (error) {
+    console.log(error);
   }
-  otpTimerInterval = setInterval(() => {
-    if (otpTimeRemaining.value > 0) {
-      otpTimeRemaining.value--;
-    } else {
-      if (otpTimerInterval) {
-        clearInterval(otpTimerInterval);
-      }
-    }
-  }, 1000);
+
+  resumeOtpTimer();
 };
 
 const closeRegistration = () => {
+  if (isLoading.value) {
+    return;
+  }
   window.location.assign("/");
 };
+
+const startOtpTimer = () => {
+  otpTimeRemaining.value = OTP_EXPIRY_TIME;
+  otpAttempts.value = 0;
+  pauseOtpTimer();
+  resumeOtpTimer();
+};
+
+// Detectar si viene del login con cuenta no confirmada
+watch(
+  otpEmail,
+  (value) => {
+    if (!value) return;
+
+    email.value.value = value;
+    step.value = "otp";
+    startOtpTimer();
+    otpEmail.value = null;
+  },
+  { immediate: true }
+);
+
+// Start OTP timer when step changes to 'otp'
+watch(step, (newStep) => {
+  if (newStep === "otp") {
+    startOtpTimer();
+  } else if (newStep === "password") {
+    // Clear password validation error when entering password step
+    password.resetField();
+  }
+
+  if (newStep !== "otp") {
+    pauseOtpTimer();
+  }
+});
 </script>
 
 <template>
@@ -345,7 +410,7 @@ const closeRegistration = () => {
             </p>
           </div>
 
-          <div class="flex flex-col gap-6" @submit.prevent="onSubmit">
+          <div class="flex flex-col gap-6">
             <div class="flex flex-col gap-4">
               <!-- Email -->
               <FormField>
@@ -395,7 +460,6 @@ const closeRegistration = () => {
 
             <Button
               class="rounded-full"
-              type="button"
               severity="primary"
               size="large"
               :disabled="!isStep1Valid"
@@ -446,6 +510,7 @@ const closeRegistration = () => {
                   id="password"
                   v-model="password.value.value"
                   toggle-mask
+                  :disabled="isLoading"
                   :invalid="!!password.errorMessage.value"
                   :feedback="false"
                 />
@@ -534,6 +599,7 @@ const closeRegistration = () => {
                   id="password-confirm"
                   v-model="passwordConfirm.value.value"
                   toggle-mask
+                  :disabled="isLoading"
                   :invalid="!!passwordConfirm.errorMessage.value"
                   :feedback="false"
                 />
@@ -564,11 +630,11 @@ const closeRegistration = () => {
               class="rounded-full"
               severity="primary"
               size="large"
+              label="Create my palace ID"
+              :loading="isLoading"
               :disabled="!isStep2Valid"
               @click="proceedToOtp"
-            >
-              Create my palace ID
-            </Button>
+            />
           </div>
         </article>
 
@@ -584,7 +650,7 @@ const closeRegistration = () => {
                 Verify your email
               </h2>
               <p class="tpc-typography-body-m text-tpc-fg-default">
-                Enter the 4-digit code we sent to {{ maskedEmail }}
+                Enter the 6-digit code we sent to {{ maskedEmail }}
               </p>
             </div>
 
@@ -592,6 +658,7 @@ const closeRegistration = () => {
               <InputOtp
                 ref="otpInput"
                 v-model="otp"
+                :length="6"
                 :disabled="hasMaxAttemptsReached"
                 @update:model-value="validateOtp"
               />
@@ -639,6 +706,22 @@ const closeRegistration = () => {
                 </div>
               </Banner>
 
+              <Banner
+                v-if="showResendSuccess"
+                severity="positive"
+                class="text-tpc-fg-positive"
+              >
+                <div class="flex gap-4 items-center">
+                  <Icon
+                    icon="IconCircleCheckFilled"
+                    class="text-tpc-fg-positive"
+                  />
+                  <p class="tpc-typography-body-xs text-tpc-fg-positive">
+                    A new code has been sent to your email.
+                  </p>
+                </div>
+              </Banner>
+
               <p
                 v-if="otpTimeRemaining === 0 && !isValidatingOtp"
                 class="tpc-typography-body-xs text-tpc-fg-danger"
@@ -658,12 +741,16 @@ const closeRegistration = () => {
 
           <div class="flex justify-center">
             <Button
+              v-if="canResendCode"
               :label="
                 otpTimeRemaining === 0 ? 'Request a new code' : 'Resend code'
               "
               link
               @click="resendOtp"
             />
+            <p v-else class="tpc-typography-body-m text-tpc-fg-default">
+              You can request a new code in {{ resendCooldownFormatted }}
+            </p>
           </div>
         </article>
       </Transition>

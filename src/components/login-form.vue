@@ -10,24 +10,47 @@ import {
   FormField,
   Message,
   Password,
+  Banner,
 } from "@tpc-development/mare-ui-components";
 import { loginDataSchema } from "@/domain/schemas/login-data.schema";
 import PalaceIdLogo from "./palace-id-logo.vue";
-import { computed } from "vue";
+import { computed, ref, watch } from "vue";
+import { useSessionStorage } from "@vueuse/core";
+import { useAuth } from "@/composables/use-auth.ts";
 
 const loginSchema = toTypedSchema(loginDataSchema);
 
 const { handleSubmit, errors } = useForm({
   validationSchema: loginSchema,
   initialValues: {
-    email: "jondoe@gmail.com",
-    password: "Password123!",
+    email: "",
+    password: "",
   },
   validateOnMount: false,
 });
 
 const email = useField<string>("email");
 const password = useField<string>("password");
+
+// Cargar email de sessionStorage si existe
+const prefillEmail = useSessionStorage<string | null>("prefill-email", null);
+const showExistingAccountBanner = ref(false);
+const showAuthError = ref(false);
+const otpEmail = useSessionStorage<string | null>("otp-email", null);
+
+const { login, isLoading } = useAuth();
+
+watch(
+  prefillEmail,
+  (value) => {
+    if (!value) return;
+
+    email.value.value = value;
+    showExistingAccountBanner.value = true;
+    prefillEmail.value = null;
+  },
+  { immediate: true }
+);
 
 const isStep1Valid = computed(() => {
   return (
@@ -39,10 +62,23 @@ const isStep1Valid = computed(() => {
 });
 
 const onSubmit = handleSubmit(async (values) => {
-  await email.validate();
-  await password.validate();
+  showAuthError.value = false;
 
-  console.log(values);
+  try {
+    const response = await login(values);
+    console.log(response);
+  } catch (error) {
+    const authError = error as { code?: string; message?: string };
+
+    if (authError.code === "UserNotConfirmedException") {
+      otpEmail.value = email.value.value;
+      window.location.assign("/register");
+    } else if (authError.code === "NotAuthorizedException") {
+      showAuthError.value = true;
+    } else {
+      console.error(error);
+    }
+  }
 });
 
 const closeLogin = () => {
@@ -62,7 +98,7 @@ const closeLogin = () => {
       <article class="pt-8 flex-1 flex flex-col gap-8">
         <PalaceIdLogo />
 
-        <div class="space-y-2 mb-8 text-center">
+        <div class="space-y-2 text-center">
           <h2 class="tpc-typography-title-m text-tpc-fg-default">
             Welcome back
           </h2>
@@ -77,6 +113,16 @@ const closeLogin = () => {
           @submit.prevent="onSubmit"
         >
           <div class="flex flex-col gap-4">
+            <Banner
+              v-if="showExistingAccountBanner"
+              icon="IconCheckCircle"
+              severity="brand"
+            >
+              <template #default>
+                You already have an account. Enter your password to log in.
+              </template>
+            </Banner>
+
             <!-- Email -->
             <FormField>
               <FloatLabel>
@@ -84,6 +130,7 @@ const closeLogin = () => {
                   id="email"
                   v-model="email.value.value"
                   :invalid="!!email.errorMessage.value"
+                  :disabled="isLoading"
                 />
                 <InputLabel label-value="Email" for="Correo electronico" />
               </FloatLabel>
@@ -99,6 +146,7 @@ const closeLogin = () => {
                   id="password"
                   v-model="password.value.value"
                   toggle-mask
+                  :disabled="isLoading"
                   :invalid="!!password.errorMessage.value"
                   :feedback="false"
                 />
@@ -113,12 +161,26 @@ const closeLogin = () => {
           </div>
 
           <div class="flex flex-col gap-4">
+            <Banner
+              v-if="showAuthError"
+              severity="danger"
+              class="text-tpc-fg-danger"
+            >
+              <div class="flex gap-4 items-center">
+                <Icon icon="IconAlertCircle" class="text-tpc-fg-danger" />
+                <p class="tpc-typography-body-xs text-tpc-fg-danger">
+                  Incorrect email or password.
+                </p>
+              </div>
+            </Banner>
+
             <Button
               class="rounded-full"
               type="submit"
               severity="primary"
               size="large"
               label="Log in"
+              :loading="isLoading"
               :disabled="!isStep1Valid"
             />
 

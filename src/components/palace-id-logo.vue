@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import PalaceIdLogo from "@assets/images/palace-id.png";
+import PalaceIdLogo from "@assets/svg/palace-id.svg";
 </script>
 
 <template>

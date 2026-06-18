@@ -6,7 +6,6 @@ export const amplifyConfig: ResourcesConfig = {
     Cognito: {
       userPoolId: import.meta.env.PUBLIC_AWS_USER_POOL_ID ?? "",
       userPoolClientId: import.meta.env.PUBLIC_AWS_USER_POOL_CLIENT_ID ?? "",
-      identityPoolId: import.meta.env.PUBLIC_AWS_IDENTITY_POOL_ID,
       loginWith: {
         email: true,
       },
@@ -17,6 +16,9 @@ export const amplifyConfig: ResourcesConfig = {
         },
       },
     },
+  },
+  API: {
+    REST: {},
   },
 };
 
