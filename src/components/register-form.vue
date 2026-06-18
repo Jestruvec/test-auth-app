@@ -658,6 +658,7 @@ watch(step, (newStep) => {
               <InputOtp
                 ref="otpInput"
                 v-model="otp"
+                integer-only
                 :length="6"
                 :disabled="hasMaxAttemptsReached"
                 @update:model-value="validateOtp"
