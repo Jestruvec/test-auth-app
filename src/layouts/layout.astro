@@ -1,5 +1,6 @@
 ---
 import "@/assets/styles/index.css";
+import { ClientRouter } from "astro:transitions";
 ---
 
 <!doctype html>
@@ -14,6 +15,7 @@ import "@/assets/styles/index.css";
     <link rel="icon" href="/favicon.ico" />
     <meta name="generator" content={Astro.generator} />
     <title>Astro Basics</title>
+    <ClientRouter />
   </head>
   <body data-theme="palace">
     <slot />
@@ -21,15 +23,32 @@ import "@/assets/styles/index.css";
 </html>
 
 <style is:global>
-  body {
-    opacity: 0;
-    animation: fadeIn 0.5s ease-in forwards;
+  /* View Transitions - Fade animation */
+  @keyframes fade-out {
+    from {
+      opacity: 1;
+    }
+    to {
+      opacity: 0;
+    }
   }
 
-  @keyframes fadeIn {
+  @keyframes fade-in {
+    from {
+      opacity: 0;
+    }
     to {
       opacity: 1;
     }
+  }
+
+  /* Aplicar fade a todas las transiciones */
+  ::view-transition-old(root) {
+    animation: 300ms cubic-bezier(0.4, 0, 0.2, 1) both fade-out;
+  }
+
+  ::view-transition-new(root) {
+    animation: 300ms cubic-bezier(0.4, 0, 0.2, 1) both fade-in;
   }
 </style>
 
@@ -66,20 +85,6 @@ import "@/assets/styles/index.css";
      */
     off(event, callback) {
       window.removeEventListener(`palace:${event}`, callback);
-    },
-
-    /**
-     * Navigate with fade transition
-     * @param {string} url - URL to navigate to
-     */
-    navigate(url) {
-      const body = document.body;
-      body.style.transition = "opacity 0.5s";
-      body.style.opacity = "0";
-
-      setTimeout(() => {
-        window.location.href = url;
-      }, 500);
     },
   };
 </script>

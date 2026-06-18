@@ -1,0 +1,10 @@
+---
+import Layout from "@/layouts/layout.astro";
+import RecoveryForm from "@/components/recovery-form.vue";
+---
+
+<Layout>
+  <div id="recovery-form" class="fixed inset-0 z-40 bg-tpc-bg-default">
+    <RecoveryForm client:only="vue" />
+  </div>
+</Layout>

@@ -24,13 +24,21 @@ import Layout from "@/layouts/layout.astro";
   // Animation timing constants
   const SPLASH_DURATION = 2000;
 
-  // Screen references
-  const splash = document.getElementById("splash");
-  const landing = document.getElementById("landing");
+  const initSplashScreen = () => {
+    const splash = document.getElementById("splash");
+    const landing = document.getElementById("landing");
 
-  // Transition from splash to landing
-  setTimeout(() => {
-    if (splash && landing) {
+    if (!splash || !landing) return;
+
+    // Reset initial state
+    splash.style.display = "block";
+    splash.style.opacity = "1";
+    splash.style.pointerEvents = "auto";
+    landing.style.opacity = "0";
+    landing.style.pointerEvents = "none";
+
+    // Transition from splash to landing
+    setTimeout(() => {
       splash.style.opacity = "0";
       splash.style.pointerEvents = "none";
 
@@ -40,6 +48,14 @@ import Layout from "@/layouts/layout.astro";
       setTimeout(() => {
         splash.style.display = "none";
       }, 500);
-    }
-  }, SPLASH_DURATION);
+    }, SPLASH_DURATION);
+  };
+
+  // Run on initial page load
+  initSplashScreen();
+
+  // Re-run when navigating back with View Transitions
+  document.addEventListener("astro:page-load", () => {
+    initSplashScreen();
+  });
 </script>

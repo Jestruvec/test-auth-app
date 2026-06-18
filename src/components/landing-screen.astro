@@ -73,6 +73,7 @@ const contentSlides = [
         <p
           id="title-text"
           class="tpc-typography-title-m text-white text-center h-18"
+          style="text-wrap: balance;"
         >
           {contentSlides[0].title}
         </p>
@@ -96,21 +97,21 @@ const contentSlides = [
     </div>
 
     <div class="flex flex-col gap-2">
-      <button
-        id="register-btn"
-        class="py-2.5 px-5.5 bg-white rounded-full tpc-typography-label-m"
+      <a
+        href="/register"
+        class="py-2.5 px-5.5 bg-white rounded-full tpc-typography-label-m text-center no-underline text-black"
       >
         Register
-      </button>
-      <button
-        id="login-btn"
-        class="rounded-full border-none text-white! py-2.5 px-5.5 tpc-typography-label-m"
+      </a>
+      <a
+        href="/login"
+        class="rounded-full border-none text-white! py-2.5 px-5.5 tpc-typography-label-m text-center no-underline"
         style="background: rgba(255, 255, 255, 0.08)"
       >
         Log in
-      </button>
+      </a>
       <button
-        id="login-btn"
+        id="guest-btn"
         class="rounded-full border-none text-white! py-2.5 px-5.5 tpc-typography-label-s"
       >
         Continue as guest
@@ -120,17 +121,6 @@ const contentSlides = [
 </div>
 
 <script define:vars={{ contentSlides }}>
-  // ============================================================
-  // Navigation event listeners
-  // ============================================================
-  document.getElementById("register-btn")?.addEventListener("click", () => {
-    window.PalaceApp.navigate("/register");
-  });
-
-  document.getElementById("login-btn")?.addEventListener("click", () => {
-    window.PalaceApp.navigate("/login");
-  });
-
   // ============================================================
   // Carousel functionality
   // ============================================================
@@ -265,5 +255,19 @@ const contentSlides = [
   .carousel-image:not(.active) {
     position: absolute;
     left: -9999px;
+  }
+
+  /* Links styled as buttons */
+  a {
+    display: block;
+    text-decoration: none;
+  }
+
+  a:hover {
+    opacity: 0.9;
+  }
+
+  a:active {
+    opacity: 0.8;
   }
 </style>

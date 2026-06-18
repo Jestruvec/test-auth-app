@@ -81,17 +81,14 @@ const onSubmit = handleSubmit(async (values) => {
   }
 });
 
-const closeLogin = () => {
-  window.location.assign("/");
-};
 </script>
 
 <template>
   <div class="flex flex-col h-full max-w-md mx-auto">
     <div class="flex justify-between items-center gap-2 h-14 px-6 py-2">
-      <button class="w-5 h-5" @click="closeLogin">
+      <a href="/" class="w-5 h-5 flex items-center justify-center">
         <Icon icon="IconX" />
-      </button>
+      </a>
     </div>
 
     <div class="px-8 pb-8 relative flex-1 flex flex-col">
@@ -155,9 +152,12 @@ const closeLogin = () => {
               </FloatLabel>
             </FormField>
 
-            <span class="underline tpc-typography-body-s text-tpc-fg-default"
-              >Forgot your password?</span
+            <a
+              href="/recovery"
+              class="underline tpc-typography-body-s text-tpc-fg-default"
             >
+              Forgot your password?
+            </a>
           </div>
 
           <div class="flex flex-col gap-4">
@@ -188,7 +188,7 @@ const closeLogin = () => {
               class="tpc-typography-body-s text-tpc-fg-default text-center px-4"
             >
               Don't have an account?
-              <span class="underline">Sign up</span>
+              <a href="/register" class="underline">Sign up</a>
             </p>
           </div>
         </form>

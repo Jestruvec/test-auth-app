@@ -15,6 +15,7 @@ import {
   ProgressSpinner,
   Password,
   Banner,
+  Dialog,
 } from "@tpc-development/mare-ui-components";
 import { registerDataSchema } from "@/domain/schemas/register-data.schema";
 import { computed, ref, watch } from "vue";
@@ -316,13 +317,6 @@ const resendOtp = async () => {
   resumeOtpTimer();
 };
 
-const closeRegistration = () => {
-  if (isLoading.value) {
-    return;
-  }
-  window.location.assign("/");
-};
-
 const startOtpTimer = () => {
   otpTimeRemaining.value = OTP_EXPIRY_TIME;
   otpAttempts.value = 0;
@@ -357,12 +351,70 @@ watch(step, (newStep) => {
     pauseOtpTimer();
   }
 });
+
+const showModal = ref(false);
+
+const hasFormData = computed(() => {
+  return (
+    email.value.value.length > 0 ||
+    firstName.value.value.length > 0 ||
+    lastName.value.value.length > 0 ||
+    password.value.value.length > 0 ||
+    passwordConfirm.value.value.length > 0
+  );
+});
+
+const handleCloseClick = () => {
+  if (hasFormData.value) {
+    showModal.value = true;
+  } else {
+    window.location.assign("/");
+  }
+};
+
+const confirmCancel = () => {
+  window.location.assign("/");
+};
 </script>
 
 <template>
   <div key="register" class="flex flex-col h-full max-w-md mx-auto">
+    <Dialog v-model:visible="showModal" size="small" :closable="false">
+      <div class="flex flex-col gap-8 pt-8">
+        <div class="space-y-3 text-center">
+          <p class="tpc-typography-title-s text-tpc-fg-default">
+            Cancel Sign Up?
+          </p>
+          <p class="tpc-typography-body-m text-tpc-fg-default text-center">
+            Your progress will be lost. You will have to start over if you exit.
+          </p>
+        </div>
+
+        <div class="flex flex-col gap-3 pt-2">
+          <Button
+            severity="danger"
+            size="large"
+            label="Cancel and exit"
+            class="rounded-full"
+            @click="confirmCancel"
+          />
+          <Button
+            severity="secondary"
+            size="large"
+            label="Continue"
+            class="rounded-full"
+            @click="showModal = false"
+          />
+        </div>
+      </div>
+    </Dialog>
+
     <div class="flex justify-between items-center gap-2 h-14 px-6 py-2">
-      <button class="w-5 h-5" @click="closeRegistration">
+      <button
+        type="button"
+        class="w-5 h-5 flex items-center justify-center"
+        @click="handleCloseClick"
+      >
         <Icon icon="IconX" />
       </button>
       <h2 class="tpc-typography-label-m bg text-tpc-fg-default">Sign up</h2>
