@@ -48,11 +48,11 @@ const registerSchema = toTypedSchema(registerFormSchema);
 const { errors } = useForm({
   validationSchema: registerSchema,
   initialValues: {
-    email: "jondoe@test.com",
-    password: "Password123!",
-    firstName: "Jon",
-    lastName: "Doe",
-    passwordConfirm: "Password123!",
+    email: "",
+    password: "",
+    firstName: "",
+    lastName: "",
+    passwordConfirm: "",
   },
   validateOnMount: false,
 });
