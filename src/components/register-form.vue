@@ -472,7 +472,7 @@ const confirmCancel = () => {
                     v-model="email.value.value"
                     :invalid="!!email.errorMessage.value"
                   />
-                  <InputLabel label-value="Email" for="Correo electronico" />
+                  <InputLabel label-value="Email" for="email" />
                 </FloatLabel>
                 <Message v-if="errors.email" severity="danger">
                   {{ errors.email }}
@@ -487,7 +487,7 @@ const confirmCancel = () => {
                     v-model="firstName.value.value"
                     :invalid="!!firstName.errorMessage.value"
                   />
-                  <InputLabel label-value="Full name" for="firstName" />
+                  <InputLabel label-value="First name" for="firstName" />
                 </FloatLabel>
                 <Message v-if="errors.firstName" severity="danger">
                   {{ errors.firstName }}

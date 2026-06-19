@@ -7,9 +7,24 @@ import Carousel_3 from "@/assets/images/landing-carousel/carousel-3.png";
 import Carousel_4 from "@/assets/images/landing-carousel/carousel-4.png";
 import Carousel_5 from "@/assets/images/landing-carousel/carousel-5.png";
 
+import ServicesCardFan from "@/components/services-card-fan.astro";
+import LandingCarousel from "@/components/landing-carousel.astro";
+import Service_1 from "@assets/images/guest-services/entertainment.png";
+import Service_2 from "@assets/images/guest-services/restaurants.png";
+import Service_3 from "@assets/images/guest-services/room-service.png";
+import Service_4 from "@assets/images/guest-services/spa.png";
+import Service_5 from "@assets/images/guest-services/tours.png";
+
+const cards = [
+  { title: "Tours", image: Service_5 },
+  { title: "Entertainments", image: Service_1 },
+  { title: "Restaurants", image: Service_2 },
+  { title: "Room Service", image: Service_3 },
+  { title: "Spa", image: Service_4 },
+];
+
 const contentSlides = [
   {
-    image: Carousel_1,
     title: "The whole resort in one place",
     colors: { l: "#86e0f9", m: "#016692", d: "#022648" },
   },
@@ -41,7 +56,9 @@ const contentSlides = [
   class="h-full flex items-center justify-center grad"
   style={`--l: ${contentSlides[0].colors.l}; --m: ${contentSlides[0].colors.m}; --d: ${contentSlides[0].colors.d};`}
 >
-  <div class="py-8 px-6 w-full max-w-md flex flex-col justify-between h-full">
+  <div
+    class="py-8 px-6 w-full max-w-md flex flex-col gap-8 justify-between h-full"
+  >
     <Image
       src={PalaceResortsLogo}
       alt="Palace Resorts Logo"
@@ -50,51 +67,14 @@ const contentSlides = [
       fetchpriority="high"
     />
 
-    <div class="flex flex-col gap-8">
-      <div id="landing-content" class="flex flex-col gap-8">
-        <div class="relative h-61.25">
-          {
-            contentSlides.map((slide, index) => (
-              <Image
-                src={slide.image}
-                alt={slide.title}
-                class:list={[
-                  "carousel-image absolute inset-0 w-full h-full object-contain",
-                  { active: index === 0 },
-                ]}
-                data-slide={index}
-                loading="eager"
-                fetchpriority={index === 0 ? "high" : "auto"}
-              />
-            ))
-          }
-        </div>
-
-        <p
-          id="title-text"
-          class="tpc-typography-title-m text-white text-center h-18"
-          style="text-wrap: balance;"
-        >
-          {contentSlides[0].title}
-        </p>
-      </div>
-
-      <div class="flex justify-center gap-2" id="slide-indicators">
-        {
-          contentSlides.map((_, index) => (
-            <button
-              class="slide-indicator h-2 rounded-full transition-all"
-              data-index={index}
-              style={
-                index === 0
-                  ? "width: 32px; background: white;"
-                  : "width: 8px; background: rgba(255, 255, 255, 0.3);"
-              }
-            />
-          ))
-        }
-      </div>
-    </div>
+    <LandingCarousel slides={contentSlides}>
+      <ServicesCardFan
+        slot="first-slide"
+        cards={cards}
+        width={126}
+        height={160}
+      />
+    </LandingCarousel>
 
     <div class="flex flex-col gap-2">
       <a
@@ -120,144 +100,7 @@ const contentSlides = [
   </div>
 </div>
 
-<script define:vars={{ contentSlides }}>
-  // ============================================================
-  // Carousel functionality
-  // ============================================================
-  let currentSlide = 0;
-
-  const updateIndicators = () => {
-    const indicators = document.querySelectorAll(".slide-indicator");
-    indicators.forEach((indicator, index) => {
-      if (index === currentSlide) {
-        indicator.style.width = "32px";
-        indicator.style.background = "white";
-      } else {
-        indicator.style.width = "8px";
-        indicator.style.background = "rgba(255, 255, 255, 0.3)";
-      }
-    });
-  };
-
-  const updateContent = () => {
-    const slide = contentSlides[currentSlide];
-    const container = document.getElementById("landing-container");
-    const content = document.getElementById("landing-content");
-    const carouselImages = document.querySelectorAll(".carousel-image");
-    const titleText = document.getElementById("title-text");
-
-    if (container && content && carouselImages.length && titleText) {
-      content.classList.add("slide-out");
-
-      // Update gradient colors
-      container.style.setProperty("--l", slide.colors.l);
-      container.style.setProperty("--m", slide.colors.m);
-      container.style.setProperty("--d", slide.colors.d);
-
-      setTimeout(() => {
-        // Hide all images, show only current slide
-        carouselImages.forEach((img, index) => {
-          if (index === currentSlide) {
-            img.classList.add("active");
-          } else {
-            img.classList.remove("active");
-          }
-        });
-
-        titleText.textContent = slide.title;
-
-        content.classList.remove("slide-out");
-        content.classList.add("slide-in");
-
-        setTimeout(() => {
-          content.classList.remove("slide-in");
-        }, 400);
-      }, 300);
-    }
-
-    updateIndicators();
-  };
-
-  const nextSlide = () => {
-    currentSlide = (currentSlide + 1) % contentSlides.length;
-    updateContent();
-  };
-
-  const prevSlide = () => {
-    currentSlide =
-      (currentSlide - 1 + contentSlides.length) % contentSlides.length;
-    updateContent();
-  };
-
-  const goToSlide = (index) => {
-    if (index >= 0 && index < contentSlides.length) {
-      currentSlide = index;
-      updateContent();
-    }
-  };
-
-  // Attach click handlers to slide indicators
-  let autoAdvanceInterval = setInterval(nextSlide, 5000);
-  const indicators = document.querySelectorAll(".slide-indicator");
-  indicators.forEach((indicator) => {
-    indicator.addEventListener("click", () => {
-      const index = parseInt(indicator.getAttribute("data-index") || "0");
-      goToSlide(index);
-      clearInterval(autoAdvanceInterval);
-      autoAdvanceInterval = setInterval(nextSlide, 5000);
-    });
-  });
-</script>
-
 <style>
-  @keyframes slideOut {
-    from {
-      opacity: 1;
-      transform: translateX(0);
-    }
-    to {
-      opacity: 0;
-      transform: translateX(-30px);
-    }
-  }
-
-  @keyframes slideIn {
-    from {
-      opacity: 0;
-      transform: translateX(30px);
-    }
-    to {
-      opacity: 1;
-      transform: translateX(0);
-    }
-  }
-
-  .slide-out {
-    animation: slideOut 0.3s ease-out forwards;
-  }
-
-  .slide-in {
-    animation: slideIn 0.4s ease-out forwards;
-  }
-
-  /* Carousel images */
-  .carousel-image {
-    opacity: 0;
-    pointer-events: none;
-    transition: none;
-  }
-
-  .carousel-image.active {
-    opacity: 1;
-    pointer-events: auto;
-  }
-
-  .carousel-image:not(.active) {
-    position: absolute;
-    left: -9999px;
-  }
-
-  /* Links styled as buttons */
   a {
     display: block;
     text-decoration: none;

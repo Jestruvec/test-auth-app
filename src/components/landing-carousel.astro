@@ -1,0 +1,227 @@
+---
+import { Image } from "astro:assets";
+import type { ImageMetadata } from "astro";
+
+export interface ContentSlide {
+  image?: ImageMetadata;
+  title: string;
+  colors: { l: string; m: string; d: string };
+}
+
+interface Props {
+  slides: ContentSlide[];
+}
+
+const { slides } = Astro.props;
+---
+
+<div class="flex flex-col gap-8">
+  <div id="landing-content" class="flex flex-col gap-8">
+    <div class="relative h-61.25">
+      <div class="carousel-slide active" data-slide="0">
+        <slot name="first-slide" />
+      </div>
+      {
+        slides.map((slide, index) => {
+          if (!slide.image) return null;
+          return (
+            <Image
+              src={slide.image}
+              alt={slide.title}
+              class="carousel-image"
+              data-slide={index + 1}
+              loading="eager"
+              fetchpriority="auto"
+            />
+          );
+        })
+      }
+    </div>
+
+    <p
+      id="title-text"
+      class="tpc-typography-title-m text-white text-center h-18"
+      style="text-wrap: balance;"
+    >
+      {slides[0].title}
+    </p>
+  </div>
+
+  <div class="flex justify-center gap-2" id="slide-indicators">
+    {
+      slides.map((_, index) => (
+        <button
+          class="slide-indicator h-2 rounded-full transition-all"
+          data-index={index}
+          style={
+            index === 0
+              ? "width: 32px; background: white;"
+              : "width: 8px; background: rgba(255, 255, 255, 0.3);"
+          }
+        />
+      ))
+    }
+  </div>
+</div>
+
+<script define:vars={{ slides }}>
+  let currentSlide = 0;
+
+  const updateIndicators = () => {
+    const indicators = document.querySelectorAll(".slide-indicator");
+    indicators.forEach((indicator, index) => {
+      if (index === currentSlide) {
+        indicator.style.width = "32px";
+        indicator.style.background = "white";
+      } else {
+        indicator.style.width = "8px";
+        indicator.style.background = "rgba(255, 255, 255, 0.3)";
+      }
+    });
+  };
+
+  const updateContent = () => {
+    const slide = slides[currentSlide];
+    const container = document.getElementById("landing-container");
+    const content = document.getElementById("landing-content");
+    const carouselSlides = document.querySelectorAll(
+      ".carousel-slide, .carousel-image"
+    );
+    const titleText = document.getElementById("title-text");
+
+    if (container && content && carouselSlides.length && titleText) {
+      content.classList.add("slide-out");
+
+      // Update gradient colors
+      container.style.setProperty("--l", slide.colors.l);
+      container.style.setProperty("--m", slide.colors.m);
+      container.style.setProperty("--d", slide.colors.d);
+
+      setTimeout(() => {
+        // Hide all slides, show only current slide
+        carouselSlides.forEach((slideEl, index) => {
+          if (index === currentSlide) {
+            slideEl.classList.add("active");
+          } else {
+            slideEl.classList.remove("active");
+          }
+        });
+
+        titleText.textContent = slide.title;
+
+        content.classList.remove("slide-out");
+        content.classList.add("slide-in");
+
+        setTimeout(() => {
+          content.classList.remove("slide-in");
+        }, 400);
+      }, 300);
+    }
+
+    updateIndicators();
+  };
+
+  const nextSlide = () => {
+    currentSlide = (currentSlide + 1) % slides.length;
+    updateContent();
+  };
+
+  const prevSlide = () => {
+    currentSlide = (currentSlide - 1 + slides.length) % slides.length;
+    updateContent();
+  };
+
+  const goToSlide = (index) => {
+    if (index >= 0 && index < slides.length) {
+      currentSlide = index;
+      updateContent();
+    }
+  };
+
+  // Attach click handlers to slide indicators
+  let autoAdvanceInterval = setInterval(nextSlide, 5000);
+  const indicators = document.querySelectorAll(".slide-indicator");
+  indicators.forEach((indicator) => {
+    indicator.addEventListener("click", () => {
+      const index = parseInt(indicator.getAttribute("data-index") || "0");
+      goToSlide(index);
+      clearInterval(autoAdvanceInterval);
+      autoAdvanceInterval = setInterval(nextSlide, 5000);
+    });
+  });
+</script>
+
+<style>
+  @keyframes slideOut {
+    from {
+      opacity: 1;
+      transform: translateX(0);
+    }
+    to {
+      opacity: 0;
+      transform: translateX(-30px);
+    }
+  }
+
+  @keyframes slideIn {
+    from {
+      opacity: 0;
+      transform: translateX(30px);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+
+  .slide-out {
+    animation: slideOut 0.3s ease-out forwards;
+  }
+
+  .slide-in {
+    animation: slideIn 0.4s ease-out forwards;
+  }
+
+  .carousel-slide {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .carousel-slide.active {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  .carousel-slide:not(.active) {
+    position: absolute;
+    left: -9999px;
+  }
+
+  .carousel-image {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    opacity: 0;
+    pointer-events: none;
+    transition: none;
+  }
+
+  .carousel-image.active {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  .carousel-image:not(.active) {
+    position: absolute;
+    left: -9999px;
+  }
+</style>
