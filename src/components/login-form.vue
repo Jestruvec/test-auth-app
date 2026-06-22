@@ -18,6 +18,7 @@ import OtpVerificationStep from "./otp-verification-step.vue";
 import { computed, ref, watch } from "vue";
 import { useSessionStorage } from "@vueuse/core";
 import { useAuth } from "@/composables/use-auth.ts";
+import type { AuthSession } from "@/domain/types/auth-session";
 
 type StepType = "login" | "otp";
 const step = ref<StepType>("login");
@@ -57,13 +58,33 @@ const isStep1Valid = computed(() => {
   );
 });
 
-const onSubmit = handleSubmit(async (values) => {
-  try {
-    const response = await login(values);
-    console.log(response);
-  } catch {
-    // Error handling is done in the watch(errorState) above
+const handleNativeNavigation = (session: AuthSession) => {
+  if (window.AndroidInterface) {
+    window.AndroidInterface.goToHome();
+  } else if (window.ReactNativeWebView) {
+    const messageData = {
+      action: "login_success" as const,
+      payload: {
+        NameId: session.user.id,
+        Email: session.user.email,
+        PhoneNumber: session.user.phone ?? "",
+        FirstName: session.user.firstName,
+        LastName: session.user.lastName,
+        Token: session.tokens.accessToken,
+        ActiveReservation: "00000000", // TODO: Replace with actual data
+        ActiveResort: "TEMP", // TODO: Replace with actual data
+        GuestIdentifier: session.user.id,
+        ProfileImage: session.user.avatar ?? "",
+        ProfileGuestType: "R", // TODO: Replace with actual data
+      },
+    };
+    window.ReactNativeWebView.postMessage(JSON.stringify(messageData));
   }
+};
+
+const onSubmit = handleSubmit(async (loginData) => {
+  const session = await login(loginData);
+  handleNativeNavigation(session);
 });
 
 const validateOtp = async (code: string) => {
@@ -71,15 +92,13 @@ const validateOtp = async (code: string) => {
 };
 
 const onOtpSuccess = async () => {
-  // After email confirmation, auto-login the user
-  try {
-    await login({
-      email: email.value.value,
-      password: password.value.value,
-    });
-  } catch (error) {
-    console.log(error);
-  }
+  const loginData = {
+    email: email.value.value,
+    password: password.value.value,
+  };
+
+  const session = await login(loginData);
+  handleNativeNavigation(session);
 };
 
 // Switch to OTP step if user is not confirmed

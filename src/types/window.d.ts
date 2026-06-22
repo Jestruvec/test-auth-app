@@ -57,12 +57,52 @@ interface PalaceApp {
 }
 
 /**
+ * Login success payload data
+ */
+interface LoginSuccessPayload {
+  NameId: string;
+  Email: string;
+  PhoneNumber: string;
+  FirstName: string;
+  LastName: string;
+  Token: string;
+  ActiveReservation: string;
+  ActiveResort: string;
+  GuestIdentifier: string;
+  ProfileImage: string;
+  ProfileGuestType: string;
+}
+
+/**
+ * Message data structure for React Native WebView communication
+ */
+export interface ReactNativeMessage {
+  action: "login_success";
+  payload: LoginSuccessPayload;
+}
+
+/**
+ * React Native WebView interface
+ */
+interface ReactNativeWebView {
+  postMessage(message: string): void;
+}
+
+/**
+ * Android native interface
+ */
+interface AndroidInterface {
+  goToGuest(): void;
+  goToHome(): void;
+}
+
+/**
  * Extend Window interface
  */
 declare global {
   interface Window {
     PalaceApp: PalaceApp;
+    ReactNativeWebView?: ReactNativeWebView;
+    AndroidInterface?: AndroidInterface;
   }
 }
-
-export {};

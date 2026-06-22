@@ -63,12 +63,8 @@ const proceedToPassword = async () => {
     return;
   }
 
-  try {
-    await resetPassword(email.value.value);
-    step.value = "password";
-  } catch {
-    // Error handling is reactive via errorState
-  }
+  await resetPassword(email.value.value);
+  step.value = "password";
 };
 
 const proceedToOtp = async () => {

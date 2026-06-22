@@ -122,13 +122,8 @@ const proceedToOtp = async () => {
     password: password.value.value,
   };
 
-  try {
-    const response = await register(registerData);
-    console.log(response);
-    step.value = "otp";
-  } catch {
-    // Error handling is done in the watch(errorState) above
-  }
+  await register(registerData);
+  step.value = "otp";
 };
 
 const validateOtp = async (code: string) => {
