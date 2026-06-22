@@ -59,7 +59,13 @@ const isStep1Valid = computed(() => {
 });
 
 const handleNativeNavigation = (session: AuthSession) => {
+  console.log("[DEBUG] handleNativeNavigation called");
+  console.log("[DEBUG] session:", session);
+  console.log("[DEBUG] window.AndroidInterface:", window.AndroidInterface);
+  console.log("[DEBUG] window.ReactNativeWebView:", window.ReactNativeWebView);
+
   if (window.AndroidInterface) {
+    console.log("[DEBUG] Using AndroidInterface.goToHome()");
     window.AndroidInterface.goToHome();
   } else if (window.ReactNativeWebView) {
     const messageData = {
@@ -78,7 +84,10 @@ const handleNativeNavigation = (session: AuthSession) => {
         ProfileGuestType: "R", // TODO: Replace with actual data
       },
     };
+    console.log("[DEBUG] Sending message to ReactNativeWebView:", messageData);
     window.ReactNativeWebView.postMessage(JSON.stringify(messageData));
+  } else {
+    console.warn("[DEBUG] No native interface detected");
   }
 };
 

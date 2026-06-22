@@ -104,10 +104,18 @@ const contentSlides = [
   const guestBtn = document.getElementById("guest-btn");
 
   guestBtn?.addEventListener("click", () => {
+    console.log("[DEBUG] Guest button clicked");
+    console.log("[DEBUG] window.AndroidInterface:", window.AndroidInterface);
+    console.log("[DEBUG] window.ReactNativeWebView:", window.ReactNativeWebView);
+
     if (window.AndroidInterface) {
+      console.log("[DEBUG] Using AndroidInterface.goToGuest()");
       window.AndroidInterface.goToGuest();
     } else if (window.ReactNativeWebView) {
+      console.log("[DEBUG] Using ReactNativeWebView.postMessage()");
       window.ReactNativeWebView.postMessage("continue_as_guest");
+    } else {
+      console.warn("[DEBUG] No native interface detected");
     }
   });
 </script>
