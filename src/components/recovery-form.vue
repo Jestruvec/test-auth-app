@@ -53,7 +53,12 @@ const isStep1Valid = computed(() => {
   return !email.errorMessage.value && email.value.value.length > 0;
 });
 const isStep2Valid = computed(() => {
-  return !password.errorMessage.value && !passwordConfirm.errorMessage.value;
+  return (
+    !password.errorMessage.value &&
+    !passwordConfirm.errorMessage.value &&
+    password.value.value.length > 0 &&
+    passwordConfirm.value.value.length > 0
+  );
 });
 
 const proceedToPassword = async () => {

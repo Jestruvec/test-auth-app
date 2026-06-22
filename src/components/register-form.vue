@@ -82,7 +82,12 @@ const isStep1Valid = computed(() => {
 });
 
 const isStep2Valid = computed(() => {
-  return !password.errorMessage.value && !passwordConfirm.errorMessage.value;
+  return (
+    !password.errorMessage.value &&
+    !passwordConfirm.errorMessage.value &&
+    password.value.value.length > 0 &&
+    passwordConfirm.value.value.length > 0
+  );
 });
 
 const hasFormData = computed(() => {
