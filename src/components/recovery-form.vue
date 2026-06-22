@@ -18,8 +18,9 @@ import { computed, ref, watch } from "vue";
 import { usePasswordValidation } from "@/composables/use-password-validation";
 import PasswordStrengthIndicator from "./password-strength-indicator.vue";
 import OtpVerificationStep from "./otp-verification-step.vue";
+import IconCheckCircleFilled from "@assets/svg/circle-check-filled.svg";
 
-type StepType = "email" | "password" | "otp";
+type StepType = "email" | "password" | "otp" | "complete";
 const step = ref<StepType>("email");
 
 const {
@@ -83,6 +84,11 @@ const proceedToOtp = async () => {
 
 const validateOtp = async (code: string) => {
   await confirmResetPassword(email.value.value, code, password.value.value);
+  step.value = "complete";
+};
+
+const goToLogin = () => {
+  window.location.assign("/login");
 };
 
 watch(step, (newStep) => {
@@ -94,7 +100,10 @@ watch(step, (newStep) => {
 
 <template>
   <div key="recovery" class="flex flex-col h-full max-w-md mx-auto">
-    <div class="flex justify-between items-center gap-2 h-14 px-6 py-2">
+    <div
+      v-if="step !== 'complete'"
+      class="flex justify-between items-center gap-2 h-14 px-6 py-2"
+    >
       <a href="/login" class="w-5 h-5 flex items-center justify-center">
         <Icon icon="IconX" />
       </a>
@@ -158,12 +167,11 @@ watch(step, (newStep) => {
               class="rounded-full"
               severity="primary"
               size="large"
+              label="Send code"
               :disabled="!isStep1Valid"
               :loading="isLoading"
               @click="proceedToPassword"
-            >
-              Send code
-            </Button>
+            />
           </div>
         </article>
 
@@ -261,6 +269,34 @@ watch(step, (newStep) => {
           :is-otp-error="isOtpError"
           title="Enter the code"
         />
+
+        <article
+          v-else-if="step === 'complete'"
+          class="flex-1 flex flex-col justify-between"
+        >
+          <div />
+
+          <div
+            class="text-center flex flex-col gap-2 justify-center items-center"
+          >
+            <img :src="IconCheckCircleFilled.src" alt="Icon Check" />
+            <h2 class="tpc-typography-title-m text-tpc-fg-default">
+              Password reset
+            </h2>
+            <p class="tpc-typography-body-m text-tpc-fg-default">
+              Your password has been updated successfully. You can now log in
+              with your new password.
+            </p>
+          </div>
+
+          <Button
+            class="rounded-full"
+            severity="primary"
+            size="large"
+            label="Log in"
+            @click="goToLogin"
+          />
+        </article>
       </Transition>
     </div>
   </div>

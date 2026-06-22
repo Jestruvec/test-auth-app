@@ -19,10 +19,13 @@ import { computed, ref, watch } from "vue";
 import { useSessionStorage } from "@vueuse/core";
 import { useAuth } from "@/composables/use-auth.ts";
 
-const loginSchema = toTypedSchema(loginDataSchema);
+type StepType = "login" | "otp";
+const step = ref<StepType>("login");
+
+const prefillEmail = useSessionStorage<string | null>("prefill-email", null);
 
 const { handleSubmit, errors } = useForm({
-  validationSchema: loginSchema,
+  validationSchema: toTypedSchema(loginDataSchema),
   initialValues: {
     email: "",
     password: "",
@@ -33,11 +36,6 @@ const { handleSubmit, errors } = useForm({
 const email = useField<string>("email");
 const password = useField<string>("password");
 
-type StepType = "login" | "otp";
-const step = ref<StepType>("login");
-
-// Cargar email de sessionStorage si existe
-const prefillEmail = useSessionStorage<string | null>("prefill-email", null);
 const showExistingAccountBanner = ref(false);
 
 const {
@@ -49,25 +47,6 @@ const {
   isUserNotConfirmedError,
   isOtpError,
 } = useAuth();
-
-// Switch to OTP step if user is not confirmed
-watch(isUserNotConfirmedError, (isError) => {
-  if (!isError) return;
-
-  step.value = "otp";
-});
-
-watch(
-  prefillEmail,
-  (value) => {
-    if (!value) return;
-
-    email.value.value = value;
-    showExistingAccountBanner.value = true;
-    prefillEmail.value = null;
-  },
-  { immediate: true }
-);
 
 const isStep1Valid = computed(() => {
   return (
@@ -102,6 +81,26 @@ const onOtpSuccess = async () => {
     console.log(error);
   }
 };
+
+// Switch to OTP step if user is not confirmed
+watch(isUserNotConfirmedError, (isError) => {
+  if (!isError) return;
+
+  step.value = "otp";
+});
+
+// Load email from sessionStorage if exists
+watch(
+  prefillEmail,
+  (value) => {
+    if (!value) return;
+
+    email.value.value = value;
+    showExistingAccountBanner.value = true;
+    prefillEmail.value = null;
+  },
+  { immediate: true }
+);
 </script>
 
 <template>

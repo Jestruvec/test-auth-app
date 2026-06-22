@@ -1,8 +1,5 @@
 <script setup lang="ts">
-import {
-  Icon,
-  ProgressBar,
-} from "@tpc-development/mare-ui-components";
+import { Icon, ProgressBar } from "@tpc-development/mare-ui-components";
 
 interface PasswordValidations {
   minLength: boolean;
@@ -17,13 +14,13 @@ interface PasswordStrength {
   bgColor: string;
 }
 
-interface Props {
+interface Properties {
   validations: PasswordValidations;
   progress: number;
   strength: PasswordStrength;
 }
 
-defineProps<Props>();
+defineProps<Properties>();
 </script>
 
 <template>
@@ -60,9 +57,7 @@ defineProps<Props>();
       <div class="flex gap-2 items-center">
         <Icon
           :icon="
-            validations.minLength
-              ? 'IconCircleCheckFilled'
-              : 'IconCircleCheck'
+            validations.minLength ? 'IconCircleCheckFilled' : 'IconCircleCheck'
           "
         />
         <span>At least 8 characters</span>
@@ -80,9 +75,7 @@ defineProps<Props>();
       <div class="flex gap-2 items-center">
         <Icon
           :icon="
-            validations.hasNumber
-              ? 'IconCircleCheckFilled'
-              : 'IconCircleCheck'
+            validations.hasNumber ? 'IconCircleCheckFilled' : 'IconCircleCheck'
           "
         />
         <span>One number</span>
