@@ -1,23 +1,30 @@
 <script setup lang="ts">
+import { computed, ref, watch } from "vue";
+
 import { useForm, useField } from "vee-validate";
 import { toTypedSchema } from "@vee-validate/zod";
+import { navigate } from "astro:transitions/client";
+
 import {
+  Banner,
   Button,
   FloatLabel,
+  FormField,
   Icon,
   InputLabel,
   InputText,
-  FormField,
   Message,
-  Banner,
   Password,
 } from "@tpc-development/mare-ui-components";
-import { recoveryDataSchema } from "@/domain/schemas/recovery-data.schema";
-import { useAuth } from "@/composables/use-auth.ts";
-import { computed, ref, watch } from "vue";
+
+import { recoveryDataSchema } from "@domain/schemas/recovery-data.schema";
+
+import { useAuth } from "@/composables/use-auth";
 import { usePasswordValidation } from "@/composables/use-password-validation";
-import PasswordStrengthIndicator from "./password-strength-indicator.vue";
-import OtpVerificationStep from "./otp-verification-step.vue";
+
+import OtpVerificationStep from "@components/otp-verification-step.vue";
+import PasswordStrengthIndicator from "@components/password-strength-indicator.vue";
+
 import IconCheckCircleFilled from "@assets/svg/circle-check-filled.svg";
 
 type StepType = "email" | "password" | "otp" | "complete";
@@ -88,8 +95,8 @@ const validateOtp = async (code: string) => {
   step.value = "complete";
 };
 
-const goToLogin = () => {
-  window.location.assign("/login");
+const goToLogin = async () => {
+  await navigate("/login");
 };
 
 watch(step, (newStep) => {

@@ -1,30 +1,38 @@
 <script setup lang="ts">
+import { computed, ref, watch } from "vue";
+
 import { useForm, useField } from "vee-validate";
 import { toTypedSchema } from "@vee-validate/zod";
+
+import { useSessionStorage } from "@vueuse/core";
+
 import {
   Button,
+  Dialog,
+  Divider,
   FloatLabel,
+  FormField,
   Icon,
   InputLabel,
   InputText,
-  Divider,
-  FormField,
   Message,
   Password,
-  Dialog,
 } from "@tpc-development/mare-ui-components";
-import { registerDataSchema } from "@/domain/schemas/register-data.schema";
-import { computed, ref, watch } from "vue";
-import PalaceIdLogo from "./palace-id-logo.vue";
-import BaglioniLogoSm from "@assets/svg/logos-sm/baglioni-resorts.svg";
-import PalaceEliteLogoSm from "@assets/svg/logos-sm/palace-elite.svg";
-import LeBlancLogoSm from "@assets/svg/logos-sm/le-blanc.svg";
-import PalaceResortsLogoSm from "@assets/svg/logos-sm/palace-resorts.svg";
-import { useAuth } from "@/composables/use-auth.ts";
-import { useSessionStorage } from "@vueuse/core";
+
+import { registerDataSchema } from "@domain/schemas/register-data.schema";
+
+import { useAuth } from "@/composables/use-auth";
 import { usePasswordValidation } from "@/composables/use-password-validation";
-import PasswordStrengthIndicator from "./password-strength-indicator.vue";
-import OtpVerificationStep from "./otp-verification-step.vue";
+
+import OtpVerificationStep from "@components/otp-verification-step.vue";
+import PalaceIdLogo from "@components/palace-id-logo.vue";
+import PasswordStrengthIndicator from "@components/password-strength-indicator.vue";
+
+import BaglioniLogoSm from "@assets/svg/logos-sm/baglioni-resorts.svg";
+import LeBlancLogoSm from "@assets/svg/logos-sm/le-blanc.svg";
+import PalaceEliteLogoSm from "@assets/svg/logos-sm/palace-elite.svg";
+import PalaceResortsLogoSm from "@assets/svg/logos-sm/palace-resorts.svg";
+import { navigate } from "astro:transitions/client";
 
 type StepType = "email" | "password" | "otp";
 const step = ref<StepType>("email");
@@ -139,16 +147,16 @@ const onOtpSuccess = () => {
   window.PalaceApp.emit("registration-complete");
 };
 
-const handleCloseClick = () => {
+const handleCloseClick = async () => {
   if (hasFormData.value) {
     showModal.value = true;
   } else {
-    window.location.assign("/");
+    await navigate("/");
   }
 };
 
-const confirmCancel = () => {
-  window.location.assign("/");
+const confirmCancel = async () => {
+  await navigate("/");
 };
 
 // Redirect to login if email already exists

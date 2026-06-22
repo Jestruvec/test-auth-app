@@ -1,24 +1,31 @@
 <script setup lang="ts">
+import { computed, ref, watch } from "vue";
+
 import { useForm, useField } from "vee-validate";
 import { toTypedSchema } from "@vee-validate/zod";
+
+import { useSessionStorage } from "@vueuse/core";
+
 import {
+  Banner,
   Button,
   FloatLabel,
+  FormField,
   Icon,
   InputLabel,
   InputText,
-  FormField,
   Message,
   Password,
-  Banner,
 } from "@tpc-development/mare-ui-components";
-import { loginDataSchema } from "@/domain/schemas/login-data.schema";
-import PalaceIdLogo from "./palace-id-logo.vue";
-import OtpVerificationStep from "./otp-verification-step.vue";
-import { computed, ref, watch } from "vue";
-import { useSessionStorage } from "@vueuse/core";
-import { useAuth } from "@/composables/use-auth.ts";
-import type { AuthSession } from "@/domain/types/auth-session";
+
+import { loginDataSchema } from "@domain/schemas/login-data.schema";
+
+import { useAuth } from "@/composables/use-auth";
+
+import OtpVerificationStep from "@components/otp-verification-step.vue";
+import PalaceIdLogo from "@components/palace-id-logo.vue";
+
+import type { AuthSession } from "@domain/types/auth-session";
 
 type StepType = "login" | "otp";
 const step = ref<StepType>("login");
@@ -37,8 +44,6 @@ const { handleSubmit, errors } = useForm({
 const email = useField<string>("email");
 const password = useField<string>("password");
 
-const showExistingAccountBanner = ref(false);
-
 const {
   login,
   confirmEmail,
@@ -49,6 +54,8 @@ const {
   isOtpError,
 } = useAuth();
 
+const showExistingAccountBanner = ref(false);
+
 const isStep1Valid = computed(() => {
   return (
     !email.errorMessage.value &&
@@ -56,6 +63,11 @@ const isStep1Valid = computed(() => {
     email.value.value.length > 0 &&
     password.value.value.length > 0
   );
+});
+
+const onSubmit = handleSubmit(async (loginData) => {
+  const session = await login(loginData);
+  handleNativeNavigation(session);
 });
 
 const handleNativeNavigation = (session: AuthSession) => {
@@ -90,11 +102,6 @@ const handleNativeNavigation = (session: AuthSession) => {
     console.warn("[DEBUG] No native interface detected");
   }
 };
-
-const onSubmit = handleSubmit(async (loginData) => {
-  const session = await login(loginData);
-  handleNativeNavigation(session);
-});
 
 const validateOtp = async (code: string) => {
   await confirmEmail(email.value.value, code);

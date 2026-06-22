@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { computed, onMounted } from "vue";
+
 import {
   Button,
   Icon,
@@ -6,8 +8,9 @@ import {
   ProgressSpinner,
   Banner,
 } from "@tpc-development/mare-ui-components";
-import { computed, onMounted } from "vue";
+
 import { useOtp } from "@/composables/use-otp";
+
 import { maskEmail } from "@/utils/email-mask";
 
 interface Properties {
