@@ -1,4 +1,4 @@
-import { ref } from "vue";
+import { ref, computed } from "vue";
 import { amplifyAuthRepository } from "@/infrastructure/auth";
 import {
   createRegisterUseCase,
@@ -6,6 +6,7 @@ import {
   createLogoutUseCase,
   createGetCurrentUserUseCase,
   createGetCurrentSessionUseCase,
+  createResetPasswordUseCase,
 } from "@/application/auth";
 import type { RegisterData } from "@/domain/types/register-data";
 import type { LoginCredentials } from "@/domain/types/login-credentials";
@@ -21,10 +22,44 @@ export function useAuth() {
   const getCurrentSessionUseCase = createGetCurrentSessionUseCase(
     amplifyAuthRepository
   );
+  const resetPasswordUseCase = createResetPasswordUseCase(
+    amplifyAuthRepository
+  );
 
   const currentUser = ref<User | null>(null);
   const isLoading = ref(false);
-  const errorState = ref<string | null>(null);
+  const errorState = ref<null | { code: string; message: string }>(null);
+
+  const isOtpError = computed(() => {
+    return (
+      errorState.value?.code === "CodeMismatchException" ||
+      errorState.value?.code === "ExpiredCodeException"
+    );
+  });
+
+  const isInvalidParameterError = computed(() => {
+    return errorState.value?.code === "InvalidParameterException";
+  });
+
+  const isNotAuthorizedError = computed(() => {
+    return errorState.value?.code === "NotAuthorizedException";
+  });
+
+  const isUserNotConfirmedError = computed(() => {
+    return errorState.value?.code === "UserNotConfirmedException";
+  });
+
+  const isUsernameExistsError = computed(() => {
+    return errorState.value?.code === "UsernameExistsException";
+  });
+
+  const handleError = (error: unknown, defaultMessage: string) => {
+    const authError = error as { code?: string; message?: string };
+    errorState.value = {
+      code: authError.code ?? "UnknownError",
+      message: authError.message ?? defaultMessage,
+    };
+  };
 
   const register = async (data: RegisterData) => {
     isLoading.value = true;
@@ -34,9 +69,7 @@ export function useAuth() {
       const result = await registerUseCase.execute(data);
       return result;
     } catch (error) {
-      const message =
-        error instanceof Error ? error.message : "Error al registrar usuario";
-      errorState.value = message;
+      handleError(error, "Error al registrar usuario");
       throw error;
     } finally {
       isLoading.value = false;
@@ -50,9 +83,7 @@ export function useAuth() {
     try {
       await registerUseCase.confirmEmail(email, code);
     } catch (error) {
-      const message =
-        error instanceof Error ? error.message : "Código inválido";
-      errorState.value = message;
+      handleError(error, "Código inválido");
       throw error;
     } finally {
       isLoading.value = false;
@@ -66,9 +97,7 @@ export function useAuth() {
     try {
       await registerUseCase.resendCode(email);
     } catch (error) {
-      const message =
-        error instanceof Error ? error.message : "Error al reenviar código";
-      errorState.value = message;
+      handleError(error, "Error al reenviar código");
       throw error;
     } finally {
       isLoading.value = false;
@@ -84,9 +113,7 @@ export function useAuth() {
       currentUser.value = session.user;
       return session;
     } catch (error) {
-      const message =
-        error instanceof Error ? error.message : "Error al iniciar sesión";
-      errorState.value = message;
+      handleError(error, "Error al iniciar sesión");
       throw error;
     } finally {
       isLoading.value = false;
@@ -101,9 +128,7 @@ export function useAuth() {
       await logoutUseCase.execute();
       currentUser.value = null;
     } catch (error) {
-      const message =
-        error instanceof Error ? error.message : "Error al cerrar sesión";
-      errorState.value = message;
+      handleError(error, "Error al cerrar sesión");
       throw error;
     } finally {
       isLoading.value = false;
@@ -119,9 +144,7 @@ export function useAuth() {
       currentUser.value = user;
       return user;
     } catch (error) {
-      const message =
-        error instanceof Error ? error.message : "Error al obtener usuario";
-      errorState.value = message;
+      handleError(error, "Error al obtener usuario");
       currentUser.value = null;
       throw error;
     } finally {
@@ -141,10 +164,47 @@ export function useAuth() {
     }
   };
 
+  const resetPassword = async (email: string) => {
+    isLoading.value = true;
+    errorState.value = null;
+
+    try {
+      await resetPasswordUseCase.execute(email);
+    } catch (error) {
+      handleError(error, "Error al solicitar recuperación de contraseña");
+      throw error;
+    } finally {
+      isLoading.value = false;
+    }
+  };
+
+  const confirmResetPassword = async (
+    email: string,
+    code: string,
+    newPassword: string
+  ) => {
+    isLoading.value = true;
+    errorState.value = null;
+
+    try {
+      await resetPasswordUseCase.confirmReset(email, code, newPassword);
+    } catch (error) {
+      handleError(error, "Error al restablecer contraseña");
+      throw error;
+    } finally {
+      isLoading.value = false;
+    }
+  };
+
   return {
     currentUser,
     isLoading,
     errorState,
+    isOtpError,
+    isInvalidParameterError,
+    isNotAuthorizedError,
+    isUserNotConfirmedError,
+    isUsernameExistsError,
     register,
     confirmEmail,
     resendCode,
@@ -152,5 +212,7 @@ export function useAuth() {
     logout,
     fetchCurrentUser,
     checkSession,
+    resetPassword,
+    confirmResetPassword,
   };
 }

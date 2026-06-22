@@ -7,47 +7,32 @@ import {
   Icon,
   InputLabel,
   InputText,
-  ProgressBar,
   Divider,
   FormField,
   Message,
-  InputOtp,
-  ProgressSpinner,
   Password,
-  Banner,
   Dialog,
 } from "@tpc-development/mare-ui-components";
 import { registerDataSchema } from "@/domain/schemas/register-data.schema";
 import { computed, ref, watch } from "vue";
-import { z } from "zod";
 import PalaceIdLogo from "./palace-id-logo.vue";
 import BaglioniLogoSm from "@assets/svg/logos-sm/baglioni-resorts.svg";
 import PalaceEliteLogoSm from "@assets/svg/logos-sm/palace-elite.svg";
 import LeBlancLogoSm from "@assets/svg/logos-sm/le-blanc.svg";
 import PalaceResortsLogoSm from "@assets/svg/logos-sm/palace-resorts.svg";
 import { useAuth } from "@/composables/use-auth.ts";
-import { useSessionStorage, useIntervalFn, useTimeoutFn } from "@vueuse/core";
+import { useSessionStorage } from "@vueuse/core";
+import { usePasswordValidation } from "@/composables/use-password-validation";
+import PasswordStrengthIndicator from "./password-strength-indicator.vue";
+import OtpVerificationStep from "./otp-verification-step.vue";
 
-const brands = [
-  { logo: PalaceResortsLogoSm, name: "Palace Resorts" },
-  { logo: LeBlancLogoSm, name: "Le Blanc" },
-  { logo: BaglioniLogoSm, name: "Baglioni" },
-  { logo: PalaceEliteLogoSm, name: "Palace Elite" },
-];
+type StepType = "email" | "password" | "otp";
+const step = ref<StepType>("email");
 
-const registerFormSchema = registerDataSchema
-  .extend({
-    passwordConfirm: z.string(),
-  })
-  .refine((data) => data.password === data.passwordConfirm, {
-    message: "Las contraseñas no coinciden",
-    path: ["passwordConfirm"],
-  });
-
-const registerSchema = toTypedSchema(registerFormSchema);
+const prefillEmail = useSessionStorage<string | null>("prefill-email", null);
 
 const { errors } = useForm({
-  validationSchema: registerSchema,
+  validationSchema: toTypedSchema(registerDataSchema),
   initialValues: {
     email: "",
     password: "",
@@ -58,59 +43,32 @@ const { errors } = useForm({
   validateOnMount: false,
 });
 
-const { register, confirmEmail, resendCode, isLoading } = useAuth();
-
-type StepType = "email" | "password" | "otp";
-const step = ref<StepType>("email");
-
-const prefillEmail = useSessionStorage<string | null>("prefill-email", null);
-const otpEmail = useSessionStorage<string | null>("otp-email", null);
-
-const MAX_OTP_ATTEMPTS = 3;
-const OTP_EXPIRY_TIME = 300;
-const RESEND_COOLDOWN_TIME = 60; // 1 minuto de espera
-
-const otp = ref();
-const otpInput = ref();
-const isValidatingOtp = ref(false);
-const otpError = ref(false);
-const otpAttempts = ref(0);
-const otpTimeRemaining = ref(OTP_EXPIRY_TIME);
-const resendCooldown = ref(0);
-const showResendSuccess = ref(false);
-
-// OTP timer interval
-const { pause: pauseOtpTimer, resume: resumeOtpTimer } = useIntervalFn(
-  () => {
-    if (otpTimeRemaining.value > 0) {
-      otpTimeRemaining.value--;
-    } else {
-      pauseOtpTimer();
-    }
-  },
-  1000,
-  { immediate: false }
-);
-
-// Resend cooldown interval
-const { pause: pauseResendCooldown, resume: resumeResendCooldown } =
-  useIntervalFn(
-    () => {
-      if (resendCooldown.value > 0) {
-        resendCooldown.value--;
-      } else {
-        pauseResendCooldown();
-      }
-    },
-    1000,
-    { immediate: false }
-  );
+const {
+  register,
+  confirmEmail,
+  resendCode,
+  isLoading,
+  isOtpError,
+  isUsernameExistsError,
+} = useAuth();
 
 const email = useField<string>("email");
 const firstName = useField<string>("firstName");
 const lastName = useField<string>("lastName");
 const password = useField<string>("password");
 const passwordConfirm = useField<string>("passwordConfirm");
+
+const { passwordValidations, passwordProgress, passwordStrength } =
+  usePasswordValidation(password.value);
+
+const showModal = ref(false);
+
+const brands = [
+  { logo: PalaceResortsLogoSm, name: "Palace Resorts" },
+  { logo: LeBlancLogoSm, name: "Le Blanc" },
+  { logo: BaglioniLogoSm, name: "Baglioni" },
+  { logo: PalaceEliteLogoSm, name: "Palace Elite" },
+];
 
 const isStep1Valid = computed(() => {
   return (
@@ -127,92 +85,14 @@ const isStep2Valid = computed(() => {
   return !password.errorMessage.value && !passwordConfirm.errorMessage.value;
 });
 
-const passwordValidations = computed(() => {
-  const pwd = password.value.value;
-  return {
-    minLength: pwd.length >= 8,
-    hasUppercase: /[A-Z]/.test(pwd),
-    hasNumber: /[0-9]/.test(pwd),
-    hasSpecialChar: /[!@#$%^&*(),.?":{}|<>]/.test(pwd),
-  };
-});
-
-const passwordProgress = computed(() => {
-  const validations = Object.values(passwordValidations.value);
-  const completed = validations.filter(Boolean).length;
-  return (completed / validations.length) * 100;
-});
-
-const passwordStrength = computed(() => {
-  const validations = Object.values(passwordValidations.value);
-  const completed = validations.filter(Boolean).length;
-
-  if (completed === 0) {
-    return { label: "", color: "", bgColor: "" };
-  }
-  if (completed <= 1) {
-    return {
-      label: "Weak",
-      color: "text-tpc-fg-danger",
-      bgColor: "var(--color-bg-danger)",
-    };
-  }
-  if (completed === 2) {
-    return {
-      label: "Regular",
-      color: "text-tpc-fg-warning",
-      bgColor: "var(--color-bg-warning)",
-    };
-  }
-  if (completed === 3) {
-    return {
-      label: "Regular",
-      color: "text-tpc-fg-warning",
-      bgColor: "var(--color-bg-warning)",
-    };
-  }
-  return {
-    label: "Strong",
-    color: "text-tpc-fg-positive",
-    bgColor: "var(--color-bg-positive)",
-  };
-});
-
-const otpTimeFormatted = computed(() => {
-  const minutes = Math.floor(otpTimeRemaining.value / 60);
-  const seconds = otpTimeRemaining.value % 60;
-  return `${minutes.toString().padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`;
-});
-
-const resendCooldownFormatted = computed(() => {
-  const minutes = Math.floor(resendCooldown.value / 60);
-  const seconds = resendCooldown.value % 60;
-  return `${minutes.toString().padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`;
-});
-
-const canResendCode = computed(() => {
-  return resendCooldown.value === 0;
-});
-
-const maskedEmail = computed(() => {
-  const emailValue = email.value.value;
-  if (!emailValue) return "";
-
-  const [localPart, domain] = emailValue.split("@");
-  if (!domain) return emailValue;
-
-  const visibleChars = Math.min(1, localPart.length);
-  const masked = localPart.slice(0, visibleChars) + "***";
-
-  return `${masked}@${domain}`;
-});
-
-const hasMaxAttemptsReached = computed(() => {
-  return otpAttempts.value >= MAX_OTP_ATTEMPTS;
-});
-
-const remainingAttempts = computed(() => {
-  return MAX_OTP_ATTEMPTS - otpAttempts.value;
+const hasFormData = computed(() => {
+  return (
+    email.value.value.length > 0 ||
+    firstName.value.value.length > 0 ||
+    lastName.value.value.length > 0 ||
+    password.value.value.length > 0 ||
+    passwordConfirm.value.value.length > 0
+  );
 });
 
 const proceedToPassword = async () => {
@@ -246,123 +126,18 @@ const proceedToOtp = async () => {
     const response = await register(registerData);
     console.log(response);
     step.value = "otp";
-  } catch (error: unknown) {
-    const authError = error as { code?: string; message?: string };
-
-    if (authError.code === "UsernameExistsException") {
-      prefillEmail.value = email.value.value;
-      window.location.assign("/login");
-    } else {
-      console.error(error);
-    }
+  } catch {
+    // Error handling is done in the watch(errorState) above
   }
 };
 
-const validateOtp = async () => {
-  if (!otp.value?.length || otp.value.length !== 6) {
-    return;
-  }
-
-  // Check if max attempts reached
-  if (otpAttempts.value >= MAX_OTP_ATTEMPTS) {
-    return;
-  }
-
-  otpError.value = false;
-  isValidatingOtp.value = true;
-
-  try {
-    await confirmEmail(email.value.value, otp.value);
-    // Notify parent to show complete screen
-    window.PalaceApp.emit("registration-complete");
-  } catch (error) {
-    console.log(error);
-
-    otpAttempts.value++;
-    otpError.value = true;
-    otp.value = "";
-    return;
-  } finally {
-    isValidatingOtp.value = false;
-  }
+const validateOtp = async (code: string) => {
+  await confirmEmail(email.value.value, code);
 };
 
-const resendOtp = async () => {
-  if (!canResendCode.value) {
-    return;
-  }
-
-  otp.value = "";
-  otpError.value = false;
-  otpAttempts.value = 0;
-  otpTimeRemaining.value = OTP_EXPIRY_TIME;
-
-  pauseOtpTimer();
-
-  try {
-    await resendCode(email.value.value);
-    showResendSuccess.value = true;
-
-    useTimeoutFn(() => {
-      showResendSuccess.value = false;
-    }, 5000);
-
-    resendCooldown.value = RESEND_COOLDOWN_TIME;
-    pauseResendCooldown();
-    resumeResendCooldown();
-  } catch (error) {
-    console.log(error);
-  }
-
-  resumeOtpTimer();
+const onOtpSuccess = () => {
+  window.PalaceApp.emit("registration-complete");
 };
-
-const startOtpTimer = () => {
-  otpTimeRemaining.value = OTP_EXPIRY_TIME;
-  otpAttempts.value = 0;
-  pauseOtpTimer();
-  resumeOtpTimer();
-};
-
-// Detectar si viene del login con cuenta no confirmada
-watch(
-  otpEmail,
-  (value) => {
-    if (!value) return;
-
-    email.value.value = value;
-    step.value = "otp";
-    startOtpTimer();
-    otpEmail.value = null;
-  },
-  { immediate: true }
-);
-
-// Start OTP timer when step changes to 'otp'
-watch(step, (newStep) => {
-  if (newStep === "otp") {
-    startOtpTimer();
-  } else if (newStep === "password") {
-    // Clear password validation error when entering password step
-    password.resetField();
-  }
-
-  if (newStep !== "otp") {
-    pauseOtpTimer();
-  }
-});
-
-const showModal = ref(false);
-
-const hasFormData = computed(() => {
-  return (
-    email.value.value.length > 0 ||
-    firstName.value.value.length > 0 ||
-    lastName.value.value.length > 0 ||
-    password.value.value.length > 0 ||
-    passwordConfirm.value.value.length > 0
-  );
-});
 
 const handleCloseClick = () => {
   if (hasFormData.value) {
@@ -375,6 +150,21 @@ const handleCloseClick = () => {
 const confirmCancel = () => {
   window.location.assign("/");
 };
+
+// Redirect to login if email already exists
+watch(isUsernameExistsError, (isError) => {
+  if (!isError) return;
+
+  prefillEmail.value = email.value.value;
+  window.location.assign("/login");
+});
+
+// Reset password field when navigating to password step
+watch(step, (newStep) => {
+  if (newStep === "password") {
+    password.resetField();
+  }
+});
 </script>
 
 <template>
@@ -571,78 +361,11 @@ const confirmCancel = () => {
               </FloatLabel>
             </FormField>
 
-            <div
-              class="rounded-tpc-container-s bg-tpc-bg-alternative mt-3 p-4 flex flex-col justify-between mb-6"
-            >
-              <div>
-                <div class="flex justify-between items-center">
-                  <p class="tpc-typography-label-s text-tpc-fg-default">
-                    Choose a password
-                  </p>
-                  <p
-                    v-if="passwordStrength.label"
-                    class="tpc-typography-body-s"
-                    :class="passwordStrength.color"
-                  >
-                    {{ passwordStrength.label }}
-                  </p>
-                </div>
-
-                <ProgressBar
-                  class="mb-6 password-strength-bar"
-                  mode="determinate"
-                  :value="passwordProgress"
-                  :style="{
-                    '--password-strength-color': passwordStrength.bgColor,
-                  }"
-                />
-              </div>
-
-              <div
-                class="flex flex-col gap-1.5 tpc-typography-body-xs text-tpc-fg-default"
-              >
-                <div class="flex gap-2 items-center">
-                  <Icon
-                    :icon="
-                      passwordValidations.minLength
-                        ? 'IconCircleCheckFilled'
-                        : 'IconCircleCheck'
-                    "
-                  />
-                  <span>At least 8 characters</span>
-                </div>
-                <div class="flex gap-2 items-center">
-                  <Icon
-                    :icon="
-                      passwordValidations.hasUppercase
-                        ? 'IconCircleCheckFilled'
-                        : 'IconCircleCheck'
-                    "
-                  />
-                  <span>One uppercase letter</span>
-                </div>
-                <div class="flex gap-2 items-center">
-                  <Icon
-                    :icon="
-                      passwordValidations.hasNumber
-                        ? 'IconCircleCheckFilled'
-                        : 'IconCircleCheck'
-                    "
-                  />
-                  <span>One number</span>
-                </div>
-                <div class="flex gap-2 items-center">
-                  <Icon
-                    :icon="
-                      passwordValidations.hasSpecialChar
-                        ? 'IconCircleCheckFilled'
-                        : 'IconCircleCheck'
-                    "
-                  />
-                  <span>One special character</span>
-                </div>
-              </div>
-            </div>
+            <PasswordStrengthIndicator
+              :validations="passwordValidations"
+              :progress="passwordProgress"
+              :strength="passwordStrength"
+            />
 
             <!-- Password Confirmation -->
             <FormField>
@@ -691,121 +414,15 @@ const confirmCancel = () => {
         </article>
 
         <!-- Step 3: OTP -->
-        <article
+        <OtpVerificationStep
           v-else-if="step === 'otp'"
           key="otp"
-          class="pt-8 flex-1 flex flex-col justify-between"
-        >
-          <div>
-            <div class="space-y-2 mb-8 text-center px-4">
-              <h2 class="tpc-typography-title-m text-tpc-fg-default">
-                Verify your email
-              </h2>
-              <p class="tpc-typography-body-m text-tpc-fg-default">
-                Enter the 6-digit code we sent to {{ maskedEmail }}
-              </p>
-            </div>
-
-            <div class="flex flex-col items-center justify-center py-6 gap-6">
-              <InputOtp
-                ref="otpInput"
-                v-model="otp"
-                integer-only
-                :length="6"
-                :disabled="hasMaxAttemptsReached"
-                @update:model-value="validateOtp"
-              />
-
-              <div
-                v-if="isValidatingOtp"
-                class="flex items-center gap-2 tpc-typography-body-m text-tpc-fg-default"
-              >
-                <ProgressSpinner
-                  class="mare:w-5 mare:h-5"
-                  style="
-                    color: var(--color-fg-accent);
-                    stroke: var(--color-fg-accent);
-                  "
-                />
-                Validating...
-              </div>
-
-              <Banner
-                v-if="otpError && !hasMaxAttemptsReached"
-                severity="danger"
-                class="text-tpc-fg-danger"
-              >
-                <div class="flex gap-4 items-center">
-                  <Icon icon="IconAlertCircle" class="text-tpc-fg-danger" />
-                  <p class="tpc-typography-body-xs text-tpc-fg-danger">
-                    Incorrect code. {{ remainingAttempts }}
-                    {{ remainingAttempts === 1 ? "attempt" : "attempts" }}
-                    remaining.
-                  </p>
-                </div>
-              </Banner>
-
-              <Banner
-                v-if="hasMaxAttemptsReached"
-                severity="danger"
-                class="text-tpc-fg-danger"
-              >
-                <div class="flex gap-4 items-center">
-                  <Icon icon="IconAlertCircle" class="text-tpc-fg-danger" />
-                  <p class="tpc-typography-body-xs text-tpc-fg-danger">
-                    Too many attempts. Please request a new code or try again
-                    later.
-                  </p>
-                </div>
-              </Banner>
-
-              <Banner
-                v-if="showResendSuccess"
-                severity="positive"
-                class="text-tpc-fg-positive"
-              >
-                <div class="flex gap-4 items-center">
-                  <Icon
-                    icon="IconCircleCheckFilled"
-                    class="text-tpc-fg-positive"
-                  />
-                  <p class="tpc-typography-body-xs text-tpc-fg-positive">
-                    A new code has been sent to your email.
-                  </p>
-                </div>
-              </Banner>
-
-              <p
-                v-if="otpTimeRemaining === 0 && !isValidatingOtp"
-                class="tpc-typography-body-xs text-tpc-fg-danger"
-              >
-                Code expired
-              </p>
-
-              <p
-                v-else-if="!isValidatingOtp"
-                class="tpc-typography-body-m text-tpc-fg-default"
-              >
-                The code expires in
-                {{ otpTimeFormatted }}
-              </p>
-            </div>
-          </div>
-
-          <div class="flex justify-center">
-            <Button
-              v-if="canResendCode"
-              :label="
-                otpTimeRemaining === 0 ? 'Request a new code' : 'Resend code'
-              "
-              link
-              @click="resendOtp"
-            />
-            <p v-else class="tpc-typography-body-m text-tpc-fg-default">
-              You can request a new code in {{ resendCooldownFormatted }}
-            </p>
-          </div>
-        </article>
+          :email="email.value.value"
+          :validate-otp-fn="validateOtp"
+          :resend-code-fn="resendCode"
+          :is-otp-error="isOtpError"
+          @success="onOtpSuccess"
+        />
       </Transition>
     </div>
   </div>

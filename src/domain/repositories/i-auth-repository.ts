@@ -12,4 +12,6 @@ export interface IAuthRepository {
   getCurrentSession(): Promise<AuthSession | null>;
   getCurrentUser(): Promise<User | null>;
   refreshSession(): Promise<AuthSession>;
+  resetPassword(email: string): Promise<void>;
+  confirmResetPassword(email: string, code: string, newPassword: string): Promise<void>;
 }

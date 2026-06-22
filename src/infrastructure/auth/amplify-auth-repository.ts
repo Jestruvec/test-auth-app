@@ -7,6 +7,8 @@ import {
   getCurrentUser as amplifyGetCurrentUser,
   fetchUserAttributes,
   fetchAuthSession,
+  resetPassword,
+  confirmResetPassword,
 } from "aws-amplify/auth";
 import type { IAuthRepository } from "@/domain/repositories/i-auth-repository";
 import type { User } from "@/domain/entities/user";
@@ -83,6 +85,12 @@ function handleAmplifyError(error: unknown): AuthError {
       return createAuthError(
         "Debes verificar tu email antes de iniciar sesión",
         "UserNotConfirmedException"
+      );
+    }
+    case "InvalidParameterException": {
+      return createAuthError(
+        "No se puede restablecer la contraseña porque no hay un email registrado o verificado",
+        "InvalidParameterException"
       );
     }
     default: {
@@ -323,6 +331,30 @@ export const amplifyAuthRepository: IAuthRepository = {
           expiresIn,
         },
       };
+    } catch (error) {
+      throw handleAmplifyError(error);
+    }
+  },
+
+  async resetPassword(email: string): Promise<void> {
+    try {
+      await resetPassword({ username: email });
+    } catch (error) {
+      throw handleAmplifyError(error);
+    }
+  },
+
+  async confirmResetPassword(
+    email: string,
+    code: string,
+    newPassword: string
+  ): Promise<void> {
+    try {
+      await confirmResetPassword({
+        username: email,
+        confirmationCode: code,
+        newPassword,
+      });
     } catch (error) {
       throw handleAmplifyError(error);
     }
