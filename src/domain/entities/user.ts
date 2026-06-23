@@ -1,30 +1,23 @@
-import type { UserRole } from "../types/user-role";
-
 export interface User {
-  id: string;
-  email: string;
-  firstName: string;
-  lastName: string;
-  role: UserRole;
-  emailVerified: boolean;
-  avatar?: string | null;
-  phone?: string | null;
-  createdAt: Date;
-  updatedAt: Date;
+  userId: string;
+  username: string;
+  email?: string;
+  firstName?: string;
+  lastName?: string;
 }
 
 export function getUserFullName(user: User): string {
-  return `${user.firstName} ${user.lastName}`.trim();
+  if (!user.firstName && !user.lastName) {
+    return user.username;
+  }
+  return `${user.firstName ?? ""} ${user.lastName ?? ""}`.trim();
 }
 
 export function getUserInitials(user: User): string {
-  return `${user.firstName.charAt(0)}${user.lastName.charAt(0)}`.toUpperCase();
-}
-
-export function hasRole(user: User, role: UserRole): boolean {
-  return user.role === role;
-}
-
-export function isAdmin(user: User): boolean {
-  return hasRole(user, "admin");
+  if (!user.firstName && !user.lastName) {
+    return user.username.substring(0, 2).toUpperCase();
+  }
+  const firstInitial = user.firstName?.charAt(0) ?? "";
+  const lastInitial = user.lastName?.charAt(0) ?? "";
+  return `${firstInitial}${lastInitial}`.toUpperCase();
 }

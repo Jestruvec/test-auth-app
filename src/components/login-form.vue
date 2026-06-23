@@ -69,16 +69,16 @@ const handleNativeNavigation = (session: AuthSession) => {
     const messageData = {
       action: "login_success" as const,
       payload: {
-        NameId: session.user.id,
-        Email: session.user.email,
-        PhoneNumber: session.user.phone ?? "",
-        FirstName: session.user.firstName,
-        LastName: session.user.lastName,
+        NameId: session.user.userId,
+        Email: session.user.email ?? "",
+        PhoneNumber: "",
+        FirstName: session.user.firstName ?? "",
+        LastName: session.user.lastName ?? "",
         Token: session.tokens.accessToken,
         ActiveReservation: "00000000", // TODO: Replace with actual data
         ActiveResort: "TEMP", // TODO: Replace with actual data
-        GuestIdentifier: session.user.id,
-        ProfileImage: session.user.avatar ?? "",
+        GuestIdentifier: session.user.userId,
+        ProfileImage: "",
         ProfileGuestType: "R", // TODO: Replace with actual data
       },
     };

@@ -5,7 +5,6 @@ import {
   signIn,
   signOut,
   getCurrentUser as amplifyGetCurrentUser,
-  fetchUserAttributes,
   fetchAuthSession,
   resetPassword,
   confirmResetPassword,
@@ -15,10 +14,23 @@ import type { User } from "@/domain/entities/user";
 import type { RegisterData } from "@/domain/types/register-data";
 import type { LoginCredentials } from "@/domain/types/login-credentials";
 import type { AuthSession } from "@/domain/types/auth-session";
-import { USER_ROLES } from "@/domain/types/user-role";
 
 export interface AuthError extends Error {
   code: string;
+}
+
+function mapCognitoUserToDomain(
+  cognitoUserId: string,
+  username: string,
+  idTokenPayload: Record<string, unknown>
+): User {
+  return {
+    userId: cognitoUserId,
+    username,
+    email: idTokenPayload.email as string | undefined,
+    firstName: idTokenPayload.given_name as string | undefined,
+    lastName: idTokenPayload.family_name as string | undefined,
+  };
 }
 
 function createAuthError(message: string, code: string): AuthError {
@@ -172,25 +184,16 @@ export const amplifyAuthRepository: IAuthRepository = {
 
       const session = await fetchAuthSession();
 
-      if (!session.tokens) {
+      if (!session.tokens?.idToken) {
         throw new Error("No se obtuvieron tokens de sesión");
       }
 
       const cognitoUser = await amplifyGetCurrentUser();
-      const attributes = await fetchUserAttributes();
-
-      const user: User = {
-        id: cognitoUser.userId,
-        email: attributes.email ?? "",
-        firstName: attributes.given_name ?? "",
-        lastName: attributes.family_name ?? "",
-        role: USER_ROLES.USER,
-        emailVerified: attributes.email_verified === "true",
-        avatar: attributes.picture ?? null,
-        phone: attributes.phone_number ?? null,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      };
+      const user = mapCognitoUserToDomain(
+        cognitoUser.userId,
+        cognitoUser.username,
+        session.tokens.idToken.payload
+      );
 
       const expiresAt = session.tokens.accessToken.payload.exp
         ? new Date(session.tokens.accessToken.payload.exp * 1000)
@@ -205,7 +208,7 @@ export const amplifyAuthRepository: IAuthRepository = {
         user,
         tokens: {
           accessToken: session.tokens.accessToken.toString(),
-          refreshToken: session.tokens.idToken?.toString() ?? "",
+          refreshToken: session.tokens.idToken.toString(),
           expiresIn,
         },
       };
@@ -226,25 +229,16 @@ export const amplifyAuthRepository: IAuthRepository = {
     try {
       const session = await fetchAuthSession();
 
-      if (!session.tokens) {
+      if (!session.tokens?.idToken) {
         return null;
       }
 
       const cognitoUser = await amplifyGetCurrentUser();
-      const attributes = await fetchUserAttributes();
-
-      const user: User = {
-        id: cognitoUser.userId,
-        email: attributes.email ?? "",
-        firstName: attributes.given_name ?? "",
-        lastName: attributes.family_name ?? "",
-        role: USER_ROLES.USER,
-        emailVerified: attributes.email_verified === "true",
-        avatar: attributes.picture ?? null,
-        phone: attributes.phone_number ?? null,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      };
+      const user = mapCognitoUserToDomain(
+        cognitoUser.userId,
+        cognitoUser.username,
+        session.tokens.idToken.payload
+      );
 
       const expiresAt = session.tokens.accessToken.payload.exp
         ? new Date(session.tokens.accessToken.payload.exp * 1000)
@@ -259,7 +253,7 @@ export const amplifyAuthRepository: IAuthRepository = {
         user,
         tokens: {
           accessToken: session.tokens.accessToken.toString(),
-          refreshToken: session.tokens.idToken?.toString() ?? "",
+          refreshToken: session.tokens.idToken.toString(),
           expiresIn,
         },
       };
@@ -271,20 +265,17 @@ export const amplifyAuthRepository: IAuthRepository = {
   async getCurrentUser(): Promise<User | null> {
     try {
       const cognitoUser = await amplifyGetCurrentUser();
-      const attributes = await fetchUserAttributes();
+      const session = await fetchAuthSession();
 
-      return {
-        id: cognitoUser.userId,
-        email: attributes.email ?? "",
-        firstName: attributes.given_name ?? "",
-        lastName: attributes.family_name ?? "",
-        role: USER_ROLES.USER,
-        emailVerified: attributes.email_verified === "true",
-        avatar: attributes.picture ?? null,
-        phone: attributes.phone_number ?? null,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      };
+      if (!session.tokens?.idToken) {
+        return null;
+      }
+
+      return mapCognitoUserToDomain(
+        cognitoUser.userId,
+        cognitoUser.username,
+        session.tokens.idToken.payload
+      );
     } catch {
       return null;
     }
@@ -294,25 +285,16 @@ export const amplifyAuthRepository: IAuthRepository = {
     try {
       const session = await fetchAuthSession({ forceRefresh: true });
 
-      if (!session.tokens) {
+      if (!session.tokens?.idToken) {
         throw new Error("No se pudieron refrescar los tokens");
       }
 
       const cognitoUser = await amplifyGetCurrentUser();
-      const attributes = await fetchUserAttributes();
-
-      const user: User = {
-        id: cognitoUser.userId,
-        email: attributes.email ?? "",
-        firstName: attributes.given_name ?? "",
-        lastName: attributes.family_name ?? "",
-        role: USER_ROLES.USER,
-        emailVerified: attributes.email_verified === "true",
-        avatar: attributes.picture ?? null,
-        phone: attributes.phone_number ?? null,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      };
+      const user = mapCognitoUserToDomain(
+        cognitoUser.userId,
+        cognitoUser.username,
+        session.tokens.idToken.payload
+      );
 
       const expiresAt = session.tokens.accessToken.payload.exp
         ? new Date(session.tokens.accessToken.payload.exp * 1000)
@@ -327,7 +309,7 @@ export const amplifyAuthRepository: IAuthRepository = {
         user,
         tokens: {
           accessToken: session.tokens.accessToken.toString(),
-          refreshToken: session.tokens.idToken?.toString() ?? "",
+          refreshToken: session.tokens.idToken.toString(),
           expiresIn,
         },
       };
