@@ -101,7 +101,10 @@ watch(step, (newStep) => {
 </script>
 
 <template>
-  <div key="recovery" class="flex flex-col h-full max-w-md mx-auto">
+  <div
+    key="recovery"
+    class="flex flex-col h-full max-w-md mx-auto safe-area-inset"
+  >
     <div
       v-if="step !== 'complete'"
       class="flex justify-between items-center gap-2 h-14 px-6 py-2"

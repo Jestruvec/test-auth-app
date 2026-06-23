@@ -53,7 +53,7 @@ const contentSlides = [
 
 <div
   id="landing-container"
-  class="h-full flex items-center justify-center grad"
+  class="h-full flex items-center justify-center grad safe-area-inset"
   style={`--l: ${contentSlides[0].colors.l}; --m: ${contentSlides[0].colors.m}; --d: ${contentSlides[0].colors.d};`}
 >
   <div
@@ -106,7 +106,10 @@ const contentSlides = [
   guestBtn?.addEventListener("click", () => {
     console.log("[DEBUG] Guest button clicked");
     console.log("[DEBUG] window.AndroidInterface:", window.AndroidInterface);
-    console.log("[DEBUG] window.ReactNativeWebView:", window.ReactNativeWebView);
+    console.log(
+      "[DEBUG] window.ReactNativeWebView:",
+      window.ReactNativeWebView
+    );
 
     if (window.AndroidInterface) {
       console.log("[DEBUG] Using AndroidInterface.goToGuest()");

@@ -7,26 +7,26 @@ import NotificationScreen from "@/components/notification-screen.astro";
 ---
 
 <Layout>
-  <div id="register-form" class="fixed inset-0 z-40 bg-tpc-bg-default safe-area-inset">
+  <div id="register-form" class="fixed inset-0 z-40 bg-tpc-bg-default">
     <RegisterForm client:only="vue" />
   </div>
   <div
     id="complete"
-    class="fixed inset-0 z-30 opacity-0 pointer-events-none safe-area-inset"
+    class="fixed inset-0 z-30 opacity-0 pointer-events-none"
     style="transition: transform 0.5s ease-in-out; transform: translateX(100%);"
   >
     <CompleteScreen />
   </div>
   <div
     id="faceid"
-    class="fixed inset-0 z-20 opacity-0 pointer-events-none safe-area-inset"
+    class="fixed inset-0 z-20 opacity-0 pointer-events-none"
     style="transition: transform 0.5s ease-in-out; transform: translateX(100%);"
   >
     <FaceIdScreen />
   </div>
   <div
     id="notification"
-    class="fixed inset-0 z-10 opacity-0 pointer-events-none safe-area-inset"
+    class="fixed inset-0 z-10 opacity-0 pointer-events-none"
     style="transition: transform 0.5s ease-in-out; transform: translateX(100%);"
   >
     <NotificationScreen />

@@ -165,7 +165,10 @@ watch(step, (newStep) => {
 </script>
 
 <template>
-  <div key="register" class="flex flex-col h-full max-w-md mx-auto">
+  <div
+    key="register"
+    class="flex flex-col h-full max-w-md mx-auto safe-area-inset"
+  >
     <Dialog v-model:visible="showModal" size="small" :closable="false">
       <div class="flex flex-col gap-8 pt-8">
         <div class="space-y-3 text-center">
