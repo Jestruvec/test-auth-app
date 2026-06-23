@@ -1,11 +1,8 @@
 <script setup lang="ts">
-import { computed, ref, watch } from "vue";
-
+import { ref, watch } from "vue";
 import { useForm, useField } from "vee-validate";
 import { toTypedSchema } from "@vee-validate/zod";
-
 import { useSessionStorage } from "@vueuse/core";
-
 import {
   Banner,
   Button,
@@ -17,32 +14,16 @@ import {
   Message,
   Password,
 } from "@tpc-development/mare-ui-components";
-
 import { loginDataSchema } from "@domain/schemas/login-data.schema";
-
 import { useAuth } from "@/composables/use-auth";
-
 import OtpVerificationStep from "@components/otp-verification-step.vue";
 import PalaceIdLogo from "@components/palace-id-logo.vue";
-
 import type { AuthSession } from "@domain/types/auth-session";
 
 type StepType = "login" | "otp";
 const step = ref<StepType>("login");
 
 const prefillEmail = useSessionStorage<string | null>("prefill-email", null);
-
-const { handleSubmit, errors } = useForm({
-  validationSchema: toTypedSchema(loginDataSchema),
-  initialValues: {
-    email: "",
-    password: "",
-  },
-  validateOnMount: false,
-});
-
-const email = useField<string>("email");
-const password = useField<string>("password");
 
 const {
   login,
@@ -54,16 +35,21 @@ const {
   isOtpError,
 } = useAuth();
 
-const showExistingAccountBanner = ref(false);
-
-const isStep1Valid = computed(() => {
-  return (
-    !email.errorMessage.value &&
-    !password.errorMessage.value &&
-    email.value.value.length > 0 &&
-    password.value.value.length > 0
-  );
+const { handleSubmit, errors, meta } = useForm({
+  validationSchema: toTypedSchema(loginDataSchema),
+  initialValues: {
+    email: "",
+    password: "",
+  },
+  validateOnMount: false,
 });
+
+const email = useField<string>("email", undefined, {
+  validateOnValueUpdate: false,
+});
+const password = useField<string>("password");
+
+const showExistingAccountBanner = ref(false);
 
 const onSubmit = handleSubmit(async (loginData) => {
   const session = await login(loginData);
@@ -187,6 +173,7 @@ watch(
                   <InputText
                     id="email"
                     v-model="email.value.value"
+                    type="email"
                     :invalid="!!email.errorMessage.value"
                     :disabled="isLoading"
                   />
@@ -242,7 +229,7 @@ watch(
                 size="large"
                 label="Log in"
                 :loading="isLoading"
-                :disabled="!isStep1Valid"
+                :disabled="!meta.valid"
               />
 
               <p

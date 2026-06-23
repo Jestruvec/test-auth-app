@@ -49,28 +49,25 @@ const { errors } = useForm({
   validateOnMount: false,
 });
 
-const email = useField<string>("email");
-const password = useField<string>("password");
+const email = useField<string>("email", undefined, {
+  validateOnValueUpdate: false,
+});
+const password = useField<string>("password", undefined, {
+  validateOnValueUpdate: false,
+});
 const passwordConfirm = useField<string>("passwordConfirm");
 
 const { passwordValidations, passwordProgress, passwordStrength } =
   usePasswordValidation(password.value);
 
 const isStep1Valid = computed(() => {
-  return !email.errorMessage.value && email.value.value.length > 0;
+  return email.meta.valid;
 });
 const isStep2Valid = computed(() => {
-  return (
-    !password.errorMessage.value &&
-    !passwordConfirm.errorMessage.value &&
-    password.value.value.length > 0 &&
-    passwordConfirm.value.value.length > 0
-  );
+  return password.meta.valid && passwordConfirm.meta.valid;
 });
 
 const proceedToPassword = async () => {
-  await email.validate();
-
   if (!isStep1Valid.value) {
     return;
   }
@@ -79,10 +76,7 @@ const proceedToPassword = async () => {
   step.value = "password";
 };
 
-const proceedToOtp = async () => {
-  await password.validate();
-  await passwordConfirm.validate();
-
+const proceedToOtp = () => {
   if (!isStep2Valid.value) {
     return;
   }
@@ -146,6 +140,7 @@ watch(step, (newStep) => {
                 <InputText
                   id="email"
                   v-model="email.value.value"
+                  type="email"
                   :invalid="!!email.errorMessage.value"
                 />
                 <InputLabel label-value="Email address" for="email" />

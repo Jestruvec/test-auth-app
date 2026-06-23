@@ -60,10 +60,18 @@ const {
   isUsernameExistsError,
 } = useAuth();
 
-const email = useField<string>("email");
-const firstName = useField<string>("firstName");
-const lastName = useField<string>("lastName");
-const password = useField<string>("password");
+const email = useField<string>("email", undefined, {
+  validateOnValueUpdate: false,
+});
+const firstName = useField<string>("firstName", undefined, {
+  validateOnValueUpdate: false,
+});
+const lastName = useField<string>("lastName", undefined, {
+  validateOnValueUpdate: false,
+});
+const password = useField<string>("password", undefined, {
+  validateOnValueUpdate: false,
+});
 const passwordConfirm = useField<string>("passwordConfirm");
 
 const { passwordValidations, passwordProgress, passwordStrength } =
@@ -79,23 +87,11 @@ const brands = [
 ];
 
 const isStep1Valid = computed(() => {
-  return (
-    !email.errorMessage.value &&
-    !firstName.errorMessage.value &&
-    !lastName.errorMessage.value &&
-    email.value.value.length > 0 &&
-    firstName.value.value.length > 0 &&
-    lastName.value.value.length > 0
-  );
+  return email.meta.valid && firstName.meta.valid && lastName.meta.valid;
 });
 
 const isStep2Valid = computed(() => {
-  return (
-    !password.errorMessage.value &&
-    !passwordConfirm.errorMessage.value &&
-    password.value.value.length > 0 &&
-    passwordConfirm.value.value.length > 0
-  );
+  return password.meta.valid && passwordConfirm.meta.valid;
 });
 
 const hasFormData = computed(() => {
@@ -108,11 +104,7 @@ const hasFormData = computed(() => {
   );
 });
 
-const proceedToPassword = async () => {
-  await email.validate();
-  await firstName.validate();
-  await lastName.validate();
-
+const proceedToPassword = () => {
   if (!isStep1Valid.value) {
     return;
   }
@@ -121,9 +113,6 @@ const proceedToPassword = async () => {
 };
 
 const proceedToOtp = async () => {
-  await password.validate();
-  await passwordConfirm.validate();
-
   if (!isStep2Valid.value) {
     return;
   }
@@ -268,6 +257,7 @@ watch(step, (newStep) => {
                   <InputText
                     id="email"
                     v-model="email.value.value"
+                    type="email"
                     :invalid="!!email.errorMessage.value"
                   />
                   <InputLabel label-value="Email" for="email" />
