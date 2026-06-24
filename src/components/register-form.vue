@@ -4,8 +4,6 @@ import { computed, ref, watch } from "vue";
 import { useForm, useField } from "vee-validate";
 import { toTypedSchema } from "@vee-validate/zod";
 
-import { useStorage } from "@vueuse/core";
-
 import {
   Button,
   Dialog,
@@ -35,14 +33,10 @@ import IconX from "@assets/svg/x.svg";
 
 import { navigate } from "astro:transitions/client";
 
+import { setPrefillEmail } from "@/stores/auth.store";
+
 type StepType = "email" | "password" | "otp";
 const step = ref<StepType>("email");
-
-const prefillEmail = useStorage<string | null>(
-  "prefill-email",
-  null,
-  sessionStorage
-);
 
 const { errors } = useForm({
   validationSchema: toTypedSchema(registerDataSchema),
@@ -163,10 +157,8 @@ const confirmCancel = async () => {
 watch(isUsernameExistsError, async (isError) => {
   if (!isError) return;
 
-  prefillEmail.value = email.value.value;
-  console.log(prefillEmail.value);
+  setPrefillEmail(email.value.value);
   await navigate("/login");
-  console.log(prefillEmail.value);
 });
 
 // Reset password field when navigating to password step

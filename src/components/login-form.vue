@@ -2,7 +2,7 @@
 import { ref, watch } from "vue";
 import { useForm, useField } from "vee-validate";
 import { toTypedSchema } from "@vee-validate/zod";
-import { useStorage } from "@vueuse/core";
+import { useStore } from "@nanostores/vue";
 import {
   Banner,
   Button,
@@ -22,14 +22,12 @@ import IconX from "@assets/svg/x.svg";
 import IconAlertCircle from "@assets/svg/alert-circle.svg";
 import IconCircleCheck from "@assets/svg/circle-check.svg";
 
+import { prefillEmailStore, clearPrefillEmail } from "@/stores/auth.store";
+
 type StepType = "login" | "otp";
 const step = ref<StepType>("login");
 
-const prefillEmail = useStorage<string | null>(
-  "prefill-email",
-  null,
-  sessionStorage
-);
+const prefillEmail = useStore(prefillEmailStore);
 
 const {
   login,
@@ -116,17 +114,15 @@ watch(isUserNotConfirmedError, (isError) => {
   step.value = "otp";
 });
 
-// Load email from sessionStorage if exists
+// Load email from store if exists
 watch(
   prefillEmail,
   (value) => {
-    console.log("[DEBUG] prefillEmail watch triggered:", value);
     if (!value) return;
 
-    console.log("[DEBUG] Setting email and showing banner");
     email.value.value = value;
     showExistingAccountBanner.value = true;
-    prefillEmail.value = null;
+    clearPrefillEmail();
   },
   { immediate: true }
 );
