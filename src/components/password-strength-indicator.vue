@@ -1,5 +1,7 @@
 <script setup lang="ts">
-import { Icon, ProgressBar } from "@tpc-development/mare-ui-components";
+import { ProgressBar } from "@tpc-development/mare-ui-components";
+import IconCircle from "@assets/svg/circle.svg";
+import IconCircleCheckFilled from "@assets/svg/circle-check-filled-blue.svg";
 
 interface PasswordValidations {
   minLength: boolean;
@@ -55,38 +57,43 @@ defineProps<Properties>();
       class="flex flex-col gap-1.5 tpc-typography-body-xs text-tpc-fg-default"
     >
       <div class="flex gap-2 items-center">
-        <Icon
-          :icon="
-            validations.minLength ? 'IconCircleCheckFilled' : 'IconCircleCheck'
+        <img
+          :src="
+            validations.minLength ? IconCircleCheckFilled.src : IconCircle.src
           "
+          alt="circle check"
         />
+
         <span>At least 8 characters</span>
       </div>
       <div class="flex gap-2 items-center">
-        <Icon
-          :icon="
+        <img
+          :src="
             validations.hasUppercase
-              ? 'IconCircleCheckFilled'
-              : 'IconCircleCheck'
+              ? IconCircleCheckFilled.src
+              : IconCircle.src
           "
+          alt="circle check"
         />
         <span>One uppercase letter</span>
       </div>
       <div class="flex gap-2 items-center">
-        <Icon
-          :icon="
-            validations.hasNumber ? 'IconCircleCheckFilled' : 'IconCircleCheck'
+        <img
+          :src="
+            validations.hasNumber ? IconCircleCheckFilled.src : IconCircle.src
           "
+          alt="circle check"
         />
         <span>One number</span>
       </div>
       <div class="flex gap-2 items-center">
-        <Icon
-          :icon="
+        <img
+          :src="
             validations.hasSpecialChar
-              ? 'IconCircleCheckFilled'
-              : 'IconCircleCheck'
+              ? IconCircleCheckFilled.src
+              : IconCircle.src
           "
+          alt="circle check"
         />
         <span>One special character</span>
       </div>

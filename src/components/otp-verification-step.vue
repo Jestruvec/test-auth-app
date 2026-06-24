@@ -3,13 +3,14 @@ import { computed, onMounted } from "vue";
 
 import {
   Button,
-  Icon,
   InputOtp,
   ProgressSpinner,
   Banner,
 } from "@tpc-development/mare-ui-components";
 
 import { useOtp } from "@/composables/use-otp";
+import IconAlertCircle from "@assets/svg/alert-circle.svg";
+import IconCircleCheckFilled from "@assets/svg/circle-check-filled.svg";
 
 import { maskEmail } from "@/utils/email-mask";
 
@@ -112,7 +113,7 @@ onMounted(startOtpTimer);
           class="text-tpc-fg-danger"
         >
           <div class="flex gap-4 items-center">
-            <Icon icon="IconAlertCircle" class="text-tpc-fg-danger" />
+            <img :src="IconAlertCircle.src" alt="alert icon" />
             <p class="tpc-typography-body-xs text-tpc-fg-danger">
               Incorrect code. {{ remainingAttempts }}
               {{ remainingAttempts === 1 ? "attempt" : "attempts" }}
@@ -127,7 +128,7 @@ onMounted(startOtpTimer);
           class="text-tpc-fg-danger"
         >
           <div class="flex gap-4 items-center">
-            <Icon icon="IconAlertCircle" class="text-tpc-fg-danger" />
+            <img :src="IconAlertCircle.src" alt="alert icon" />
             <p class="tpc-typography-body-xs text-tpc-fg-danger">
               Too many attempts. Please request a new code or try again later.
             </p>
@@ -140,7 +141,12 @@ onMounted(startOtpTimer);
           class="text-tpc-fg-positive"
         >
           <div class="flex gap-4 items-center">
-            <Icon icon="IconCircleCheckFilled" class="text-tpc-fg-positive" />
+            <img
+              :src="IconCircleCheckFilled.src"
+              alt="alert icon"
+              class="h-5 w-5"
+            />
+
             <p class="tpc-typography-body-xs text-tpc-fg-positive">
               A new code has been sent to your email.
             </p>

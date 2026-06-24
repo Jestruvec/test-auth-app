@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { computed, ref, watch } from "vue";
+import { computed, onMounted, ref, watch } from "vue";
+import { useUrlSearchParams } from "@vueuse/core";
 
 import { useForm, useField } from "vee-validate";
 import { toTypedSchema } from "@vee-validate/zod";
@@ -10,11 +11,9 @@ import {
   Button,
   FloatLabel,
   FormField,
-  Icon,
   InputLabel,
   InputText,
   Message,
-  Password,
 } from "@tpc-development/mare-ui-components";
 
 import { recoveryDataSchema } from "@domain/schemas/recovery-data.schema";
@@ -22,27 +21,39 @@ import { recoveryDataSchema } from "@domain/schemas/recovery-data.schema";
 import { useAuth } from "@/composables/use-auth";
 import { usePasswordValidation } from "@/composables/use-password-validation";
 
-import OtpVerificationStep from "@components/otp-verification-step.vue";
 import PasswordStrengthIndicator from "@components/password-strength-indicator.vue";
+import PasswordField from "@components/password-field.vue";
 
 import IconCheckCircleFilled from "@assets/svg/circle-check-filled.svg";
+import IconX from "@assets/svg/x.svg";
+import IconArrowLeft from "@assets/svg/arrow-left.svg";
+import IconAlertCircle from "@assets/svg/alert-circle.svg";
+import IconEmailSent from "@assets/svg/email-sent.svg";
 
-type StepType = "email" | "password" | "otp" | "complete";
-const step = ref<StepType>("email");
+import { maskEmail } from "@/utils/email-mask";
+
+// Si el usuario llega desde el link del correo (/recovery?email=&code=),
+// arrancamos directo en el paso de nueva contraseña con email+code precargados.
+// No reenviamos código: el del link sigue vigente (Cognito lo valida al guardar).
+const parameters = useUrlSearchParams("history");
+const linkEmail = typeof parameters.email === "string" ? parameters.email : "";
+const linkCode = typeof parameters.code === "string" ? parameters.code : "";
+const cameFromLink = ref(Boolean(linkEmail && linkCode));
+
+type StepType = "email" | "email-sent" | "password" | "complete";
+const step = ref<StepType>(cameFromLink.value ? "password" : "email");
 
 const {
   resetPassword,
-  resendCode,
   confirmResetPassword,
   isLoading,
-  isOtpError,
   isInvalidParameterError,
 } = useAuth();
 
 const { errors } = useForm({
   validationSchema: toTypedSchema(recoveryDataSchema),
   initialValues: {
-    email: "",
+    email: linkEmail,
     password: "",
     passwordConfirm: "",
   },
@@ -56,6 +67,7 @@ const password = useField<string>("password", undefined, {
   validateOnValueUpdate: false,
 });
 const passwordConfirm = useField<string>("passwordConfirm");
+const code = ref(linkCode);
 
 const { passwordValidations, passwordProgress, passwordStrength } =
   usePasswordValidation(password.value);
@@ -67,25 +79,23 @@ const isStep2Valid = computed(() => {
   return password.meta.valid && passwordConfirm.meta.valid;
 });
 
-const proceedToPassword = async () => {
+const maskedEmail = computed(() => maskEmail(email.value.value));
+
+const proceedToEmailSent = async () => {
   if (!isStep1Valid.value) {
     return;
   }
 
   await resetPassword(email.value.value);
-  step.value = "password";
+  step.value = "email-sent";
 };
 
-const proceedToOtp = () => {
-  if (!isStep2Valid.value) {
-    return;
-  }
-
-  step.value = "otp";
-};
-
-const validateOtp = async (code: string) => {
-  await confirmResetPassword(email.value.value, code, password.value.value);
+const handlePasswordResetConfirmation = async () => {
+  await confirmResetPassword(
+    email.value.value,
+    code.value,
+    password.value.value
+  );
   step.value = "complete";
 };
 
@@ -93,9 +103,34 @@ const goToLogin = async () => {
   await navigate("/login");
 };
 
+const handleBack = async () => {
+  switch (step.value) {
+    case "email": {
+      await navigate("/login");
+      break;
+    }
+    case "email-sent": {
+      step.value = "email";
+      break;
+    }
+    case "password": {
+      step.value = "email-sent";
+      break;
+    }
+  }
+};
+
 watch(step, (newStep) => {
   if (newStep === "password") {
     password.resetField();
+  }
+});
+
+// El code/email del link no deben quedar en el historial ni en logs del browser:
+// ya los tenemos en refs, así que limpiamos la URL apenas montamos.
+onMounted(() => {
+  if (cameFromLink.value) {
+    window.history.replaceState({}, "", window.location.pathname);
   }
 });
 </script>
@@ -109,9 +144,17 @@ watch(step, (newStep) => {
       v-if="step !== 'complete'"
       class="flex justify-between items-center gap-2 h-14 px-6 py-2"
     >
-      <a href="/login" class="w-5 h-5 flex items-center justify-center">
-        <Icon icon="IconX" />
-      </a>
+      <button
+        type="button"
+        class="w-5 h-5 flex items-center justify-center"
+        @click="handleBack"
+      >
+        <img
+          :src="step === 'email' ? IconX.src : IconArrowLeft.src"
+          alt="close icon"
+        />
+      </button>
+
       <h2 class="tpc-typography-label-m bg text-tpc-fg-default">
         Password recovery
       </h2>
@@ -161,7 +204,7 @@ watch(step, (newStep) => {
               class="text-tpc-fg-danger"
             >
               <div class="flex gap-4 items-center">
-                <Icon icon="IconAlertCircle" class="text-tpc-fg-danger" />
+                <img :src="IconAlertCircle.src" alt="alert icon" />
                 <p class="tpc-typography-body-xs text-tpc-fg-danger">
                   Cannot reset password for the user as there is no
                   registered/verified email.
@@ -176,37 +219,66 @@ watch(step, (newStep) => {
               label="Send code"
               :disabled="!isStep1Valid"
               :loading="isLoading"
-              @click="proceedToPassword"
+              @click="proceedToEmailSent"
             />
           </div>
         </article>
 
-        <!-- Step 2: Password -->
+        <!-- Step 2: Email Sent -->
+        <article
+          v-else-if="step === 'email-sent'"
+          class="flex-1 flex flex-col justify-between"
+        >
+          <div />
+
+          <div class="flex flex-col gap-8 items-center">
+            <img :src="IconEmailSent.src" alt="Email Image" />
+
+            <div class="space-y-2 text-center">
+              <h2 class="tpc-typography-title-m text-tpc-fg-default">
+                Check your email
+              </h2>
+              <p class="tpc-typography-body-m text-tpc-fg-default">
+                If an account associated with {{ maskedEmail }} exists, you will
+                receive an email with a link to reset your password.
+              </p>
+            </div>
+
+            <div />
+          </div>
+
+          <Button
+            class="rounded-full"
+            severity="secondary"
+            size="large"
+            label="Open email App"
+          />
+        </article>
+
+        <!-- Step 3: Password -->
         <article
           v-else-if="step === 'password'"
           key="password"
-          class="pt-8 flex-1 flex flex-col justify-between"
+          class="pt-8 flex-1 flex gap-8 flex-col justify-between"
         >
-          <div class="flex flex-col">
+          <div class="flex-1 flex flex-col justify-center">
             <div class="space-y-2 mb-8 text-center">
               <h2 class="tpc-typography-title-m text-tpc-fg-default">
-                Create your password
+                Set your new password
               </h2>
               <p class="tpc-typography-body-m text-tpc-fg-default">
-                Define a secure password to keep your account safe.
+                Set your new password, which you have not used before.
               </p>
             </div>
 
             <!-- Password -->
             <FormField>
               <FloatLabel>
-                <Password
+                <PasswordField
                   id="password"
                   v-model="password.value.value"
-                  toggle-mask
                   :disabled="isLoading"
                   :invalid="!!password.errorMessage.value"
-                  :feedback="false"
                 />
 
                 <InputLabel label-value="Contraseña" for="password" />
@@ -222,13 +294,11 @@ watch(step, (newStep) => {
             <!-- Password Confirmation -->
             <FormField>
               <FloatLabel>
-                <Password
+                <PasswordField
                   id="password-confirm"
                   v-model="passwordConfirm.value.value"
-                  toggle-mask
                   :disabled="isLoading"
                   :invalid="!!passwordConfirm.errorMessage.value"
-                  :feedback="false"
                 />
 
                 <InputLabel
@@ -245,37 +315,18 @@ watch(step, (newStep) => {
             </FormField>
           </div>
 
-          <div class="flex flex-col gap-5">
-            <p
-              class="tpc-typography-body-s text-tpc-fg-default text-center px-4"
-            >
-              By creating a Palace ID, you agree to our
-              <span class="underline">Terms of Use</span> and
-              <span class="underline">Privacy Policy</span>
-            </p>
-            <Button
-              class="rounded-full"
-              severity="primary"
-              size="large"
-              label="Create my palace ID"
-              :loading="isLoading"
-              :disabled="!isStep2Valid"
-              @click="proceedToOtp"
-            />
-          </div>
+          <Button
+            class="rounded-full"
+            severity="primary"
+            size="large"
+            label="Save new password"
+            :loading="isLoading"
+            :disabled="!isStep2Valid"
+            @click="handlePasswordResetConfirmation"
+          />
         </article>
 
-        <!-- Step 3: OTP -->
-        <OtpVerificationStep
-          v-else-if="step === 'otp'"
-          key="otp"
-          :email="email.value.value"
-          :validate-otp-fn="validateOtp"
-          :resend-code-fn="resendCode"
-          :is-otp-error="isOtpError"
-          title="Enter the code"
-        />
-
+        <!-- Step 4: Complete -->
         <article
           v-else-if="step === 'complete'"
           class="flex-1 flex flex-col justify-between"

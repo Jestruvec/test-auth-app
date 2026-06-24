@@ -8,6 +8,8 @@ import {
   createGetCurrentSessionUseCase,
   createResetPasswordUseCase,
 } from "@/application/auth";
+import { httpEmailAvailabilityRepository } from "@/infrastructure/email-availability/http-email-availability-repository";
+import { createCheckEmailAvailabilityUseCase } from "@/application/email-availability";
 import type { RegisterData } from "@/domain/types/register-data";
 import type { LoginCredentials } from "@/domain/types/login-credentials";
 import type { User } from "@/domain/entities/user";
@@ -24,6 +26,9 @@ export function useAuth() {
   );
   const resetPasswordUseCase = createResetPasswordUseCase(
     amplifyAuthRepository
+  );
+  const checkEmailAvailabilityUseCase = createCheckEmailAvailabilityUseCase(
+    httpEmailAvailabilityRepository
   );
 
   const currentUser = ref<User | null>(null);
@@ -196,6 +201,29 @@ export function useAuth() {
     }
   };
 
+  const checkEmailAvailability = async (email: string) => {
+    isLoading.value = true;
+    errorState.value = null;
+
+    try {
+      const result = await checkEmailAvailabilityUseCase.execute(email);
+
+      if (!result.available && result.reason === "EXISTS") {
+        errorState.value = {
+          code: "UsernameExistsException",
+          message: "Este email ya está registrado",
+        };
+      }
+
+      return result;
+    } catch (error) {
+      handleError(error, "Error al verificar disponibilidad");
+      return null;
+    } finally {
+      isLoading.value = false;
+    }
+  };
+
   return {
     currentUser,
     isLoading,
@@ -214,5 +242,6 @@ export function useAuth() {
     checkSession,
     resetPassword,
     confirmResetPassword,
+    checkEmailAvailability,
   };
 }

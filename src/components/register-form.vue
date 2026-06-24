@@ -4,7 +4,7 @@ import { computed, ref, watch } from "vue";
 import { useForm, useField } from "vee-validate";
 import { toTypedSchema } from "@vee-validate/zod";
 
-import { useSessionStorage } from "@vueuse/core";
+import { useStorage } from "@vueuse/core";
 
 import {
   Button,
@@ -12,11 +12,9 @@ import {
   Divider,
   FloatLabel,
   FormField,
-  Icon,
   InputLabel,
   InputText,
   Message,
-  Password,
 } from "@tpc-development/mare-ui-components";
 
 import { registerDataSchema } from "@domain/schemas/register-data.schema";
@@ -27,17 +25,24 @@ import { usePasswordValidation } from "@/composables/use-password-validation";
 import OtpVerificationStep from "@components/otp-verification-step.vue";
 import PalaceIdLogo from "@components/palace-id-logo.vue";
 import PasswordStrengthIndicator from "@components/password-strength-indicator.vue";
+import PasswordField from "@components/password-field.vue";
 
 import BaglioniLogoSm from "@assets/svg/logos-sm/baglioni-resorts.svg";
 import LeBlancLogoSm from "@assets/svg/logos-sm/le-blanc.svg";
 import PalaceEliteLogoSm from "@assets/svg/logos-sm/palace-elite.svg";
 import PalaceResortsLogoSm from "@assets/svg/logos-sm/palace-resorts.svg";
+import IconX from "@assets/svg/x.svg";
+
 import { navigate } from "astro:transitions/client";
 
 type StepType = "email" | "password" | "otp";
 const step = ref<StepType>("email");
 
-const prefillEmail = useSessionStorage<string | null>("prefill-email", null);
+const prefillEmail = useStorage<string | null>(
+  "prefill-email",
+  null,
+  sessionStorage
+);
 
 const { errors } = useForm({
   validationSchema: toTypedSchema(registerDataSchema),
@@ -58,6 +63,7 @@ const {
   isLoading,
   isOtpError,
   isUsernameExistsError,
+  checkEmailAvailability,
 } = useAuth();
 
 const email = useField<string>("email", undefined, {
@@ -104,12 +110,17 @@ const hasFormData = computed(() => {
   );
 });
 
-const proceedToPassword = () => {
+const proceedToPassword = async () => {
   if (!isStep1Valid.value) {
     return;
   }
 
-  step.value = "password";
+  const result = await checkEmailAvailability(email.value.value);
+
+  if (!result || result.available) {
+    step.value = "password";
+    return;
+  }
 };
 
 const proceedToOtp = async () => {
@@ -149,11 +160,13 @@ const confirmCancel = async () => {
 };
 
 // Redirect to login if email already exists
-watch(isUsernameExistsError, (isError) => {
+watch(isUsernameExistsError, async (isError) => {
   if (!isError) return;
 
   prefillEmail.value = email.value.value;
-  window.location.assign("/login");
+  console.log(prefillEmail.value);
+  await navigate("/login");
+  console.log(prefillEmail.value);
 });
 
 // Reset password field when navigating to password step
@@ -205,7 +218,7 @@ watch(step, (newStep) => {
         class="w-5 h-5 flex items-center justify-center"
         @click="handleCloseClick"
       >
-        <Icon icon="IconX" />
+        <img :src="IconX.src" alt="close icon" />
       </button>
       <h2 class="tpc-typography-label-m bg text-tpc-fg-default">Sign up</h2>
       <div />
@@ -305,11 +318,11 @@ watch(step, (newStep) => {
               class="rounded-full"
               severity="primary"
               size="large"
+              label="Continue"
               :disabled="!isStep1Valid"
+              :loading="isLoading"
               @click="proceedToPassword"
-            >
-              Continue
-            </Button>
+            />
           </div>
 
           <Divider layout="horizontal" />
@@ -334,7 +347,7 @@ watch(step, (newStep) => {
         <article
           v-else-if="step === 'password'"
           key="password"
-          class="pt-8 flex-1 flex flex-col justify-between"
+          class="pt-8 flex-1 flex flex-col gap-8 justify-between"
         >
           <div class="flex flex-col">
             <div class="space-y-2 mb-8 text-center">
@@ -349,13 +362,11 @@ watch(step, (newStep) => {
             <!-- Password -->
             <FormField>
               <FloatLabel>
-                <Password
+                <PasswordField
                   id="password"
                   v-model="password.value.value"
-                  toggle-mask
                   :disabled="isLoading"
                   :invalid="!!password.errorMessage.value"
-                  :feedback="false"
                 />
 
                 <InputLabel label-value="Contraseña" for="password" />
@@ -371,13 +382,11 @@ watch(step, (newStep) => {
             <!-- Password Confirmation -->
             <FormField>
               <FloatLabel>
-                <Password
+                <PasswordField
                   id="password-confirm"
                   v-model="passwordConfirm.value.value"
-                  toggle-mask
                   :disabled="isLoading"
                   :invalid="!!passwordConfirm.errorMessage.value"
-                  :feedback="false"
                 />
 
                 <InputLabel

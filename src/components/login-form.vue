@@ -2,28 +2,34 @@
 import { ref, watch } from "vue";
 import { useForm, useField } from "vee-validate";
 import { toTypedSchema } from "@vee-validate/zod";
-import { useSessionStorage } from "@vueuse/core";
+import { useStorage } from "@vueuse/core";
 import {
   Banner,
   Button,
   FloatLabel,
   FormField,
-  Icon,
   InputLabel,
   InputText,
   Message,
-  Password,
 } from "@tpc-development/mare-ui-components";
 import { loginDataSchema } from "@domain/schemas/login-data.schema";
 import { useAuth } from "@/composables/use-auth";
 import OtpVerificationStep from "@components/otp-verification-step.vue";
 import PalaceIdLogo from "@components/palace-id-logo.vue";
+import PasswordField from "@components/password-field.vue";
 import type { AuthSession } from "@domain/types/auth-session";
+import IconX from "@assets/svg/x.svg";
+import IconAlertCircle from "@assets/svg/alert-circle.svg";
+import IconCircleCheck from "@assets/svg/circle-check.svg";
 
 type StepType = "login" | "otp";
 const step = ref<StepType>("login");
 
-const prefillEmail = useSessionStorage<string | null>("prefill-email", null);
+const prefillEmail = useStorage<string | null>(
+  "prefill-email",
+  null,
+  sessionStorage
+);
 
 const {
   login,
@@ -114,8 +120,10 @@ watch(isUserNotConfirmedError, (isError) => {
 watch(
   prefillEmail,
   (value) => {
+    console.log("[DEBUG] prefillEmail watch triggered:", value);
     if (!value) return;
 
+    console.log("[DEBUG] Setting email and showing banner");
     email.value.value = value;
     showExistingAccountBanner.value = true;
     prefillEmail.value = null;
@@ -128,7 +136,7 @@ watch(
   <div class="flex flex-col h-full max-w-md mx-auto safe-area-inset">
     <div class="flex justify-between items-center gap-2 h-14 px-6 py-2">
       <a href="/" class="w-5 h-5 flex items-center justify-center">
-        <Icon icon="IconX" />
+        <img :src="IconX.src" alt="close icon" />
       </a>
     </div>
 
@@ -153,18 +161,18 @@ watch(
           </div>
 
           <form
-            class="flex flex-col flex-1 justify-between"
+            class="flex flex-col gap-8 flex-1 justify-between"
             @submit.prevent="onSubmit"
           >
             <div class="flex flex-col gap-4">
-              <Banner
-                v-if="showExistingAccountBanner"
-                icon="IconCheckCircle"
-                severity="brand"
-              >
-                <template #default>
-                  You already have an account. Enter your password to log in.
-                </template>
+              <Banner v-if="showExistingAccountBanner" severity="brand">
+                <div class="flex gap-4 items-center">
+                  <img :src="IconCircleCheck.src" alt="check icon" />
+
+                  <p class="tpc-typography-body-s text-tpc-fg-default">
+                    You already have an account. Enter your password to log in.
+                  </p>
+                </div>
               </Banner>
 
               <!-- Email -->
@@ -187,13 +195,11 @@ watch(
               <!-- Password -->
               <FormField>
                 <FloatLabel>
-                  <Password
+                  <PasswordField
                     id="password"
                     v-model="password.value.value"
-                    toggle-mask
                     :disabled="isLoading"
                     :invalid="!!password.errorMessage.value"
-                    :feedback="false"
                   />
 
                   <InputLabel label-value="Contraseña" for="password" />
@@ -215,7 +221,8 @@ watch(
                 class="text-tpc-fg-danger"
               >
                 <div class="flex gap-4 items-center">
-                  <Icon icon="IconAlertCircle" class="text-tpc-fg-danger" />
+                  <img :src="IconAlertCircle.src" alt="alert icon" />
+
                   <p class="tpc-typography-body-xs text-tpc-fg-danger">
                     Incorrect email or password.
                   </p>
