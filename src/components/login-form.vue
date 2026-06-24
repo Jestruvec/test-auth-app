@@ -219,7 +219,7 @@ watch(
                 <div class="flex gap-4 items-center">
                   <img :src="IconAlertCircle.src" alt="alert icon" />
 
-                  <p class="tpc-typography-body-xs text-tpc-fg-danger">
+                  <p class="tpc-typography-body-s text-tpc-fg-danger">
                     Incorrect email or password.
                   </p>
                 </div>
