@@ -21,7 +21,6 @@ import { useAuth } from "@/composables/use-auth";
 import { usePasswordValidation } from "@/composables/use-password-validation";
 
 import OtpVerificationStep from "@components/otp-verification-step.vue";
-import PalaceIdLogo from "@components/palace-id-logo.vue";
 import PasswordStrengthIndicator from "@components/password-strength-indicator.vue";
 import PasswordField from "@components/password-field.vue";
 
@@ -30,10 +29,15 @@ import LeBlancLogoSm from "@assets/svg/logos-sm/le-blanc.svg";
 import PalaceEliteLogoSm from "@assets/svg/logos-sm/palace-elite.svg";
 import PalaceResortsLogoSm from "@assets/svg/logos-sm/palace-resorts.svg";
 import IconX from "@assets/svg/x.svg";
+import IconKey from "@assets/svg/key.svg";
+import IconCalendar from "@assets/svg/calendar-check.svg";
+import IconShieldLock from "@assets/svg/shield-lock.svg";
+import IconUserCircle from "@assets/svg/user-circle.svg";
 
 import { navigate } from "astro:transitions/client";
 
 import { setPrefillEmail } from "@/stores/auth.store";
+import PalaceIdLogo from "@components/palace-id-logo.vue";
 
 type StepType = "email" | "password" | "otp";
 const step = ref<StepType>("email");
@@ -77,13 +81,37 @@ const passwordConfirm = useField<string>("passwordConfirm");
 const { passwordValidations, passwordProgress, passwordStrength } =
   usePasswordValidation(password.value);
 
-const showModal = ref(false);
+const showConfirmationDialog = ref(false);
+const showPalaceIdDialog = ref(false);
 
 const brands = [
   { logo: PalaceResortsLogoSm, name: "Palace Resorts" },
   { logo: LeBlancLogoSm, name: "Le Blanc" },
   { logo: BaglioniLogoSm, name: "Baglioni" },
   { logo: PalaceEliteLogoSm, name: "Palace Elite" },
+];
+
+const palaceIdFeatures = [
+  {
+    label: "Universal Access",
+    description: "Access and manage all our services from a single account.",
+    icon: IconKey,
+  },
+  {
+    label: "Your profile, everywhere",
+    description: "Preferences and favorites always with you",
+    icon: IconUserCircle,
+  },
+  {
+    label: "All your stays in one place",
+    description: "Past, current, and future reservations",
+    icon: IconCalendar,
+  },
+  {
+    label: "Secure and private",
+    description: "Your data is protected and never shared.",
+    icon: IconShieldLock,
+  },
 ];
 
 const isStep1Valid = computed(() => {
@@ -143,7 +171,7 @@ const onOtpSuccess = () => {
 
 const handleCloseClick = async () => {
   if (hasFormData.value) {
-    showModal.value = true;
+    showConfirmationDialog.value = true;
   } else {
     await navigate("/");
   }
@@ -174,7 +202,11 @@ watch(step, (newStep) => {
     key="register"
     class="flex flex-col h-full max-w-md mx-auto safe-area-inset"
   >
-    <Dialog v-model:visible="showModal" size="small" :closable="false">
+    <Dialog
+      v-model:visible="showConfirmationDialog"
+      size="small"
+      :closable="false"
+    >
       <div class="flex flex-col gap-8 pt-8">
         <div class="space-y-3 text-center">
           <p class="tpc-typography-title-s text-tpc-fg-default">
@@ -198,9 +230,56 @@ watch(step, (newStep) => {
             size="large"
             label="Continue"
             class="rounded-full"
-            @click="showModal = false"
+            @click="showConfirmationDialog = false"
           />
         </div>
+      </div>
+    </Dialog>
+
+    <Dialog v-model:visible="showPalaceIdDialog" size="small" :closable="false">
+      <div class="flex flex-col gap-8 pb-2 pt-12">
+        <PalaceIdLogo />
+
+        <div class="space-y-3 text-center" style="text-wrap: balance">
+          <p class="tpc-typography-title-s text-tpc-fg-default">
+            ¿Qué es Palace ID?
+          </p>
+          <p class="tpc-typography-body-m text-tpc-fg-default">
+            Palace ID te permite iniciar sesión y administrar los servicios de
+            todas nuestras marcas desde la misma cuenta.
+          </p>
+        </div>
+
+        <div class="flex flex-col">
+          <div
+            v-for="(feature, index) in palaceIdFeatures"
+            :key="index"
+            class="flex gap-4 py-3 h-18"
+          >
+            <div
+              class="bg-tpc-bg-accent-weak rounded-full h-12 w-12 flex justify-center items-center"
+            >
+              <img :src="feature.icon.src" :alt="`${feature.label} icon`" />
+            </div>
+            <div class="flex-1 flex flex-col">
+              <p class="tpc-typography-label-m text-tpc-fg-default">
+                {{ feature.label }}
+              </p>
+              <p class="tpc-typography-body-s text-tpc-fg-weak">
+                {{ feature.description }}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <Button
+          class="rounded-full"
+          type="submit"
+          severity="secondary"
+          size="large"
+          label="Understood"
+          @click="showPalaceIdDialog = false"
+        />
       </div>
     </Dialog>
 
@@ -252,8 +331,11 @@ watch(step, (newStep) => {
               Create your account
             </h2>
             <p class="tpc-typography-body-m text-tpc-fg-default">
-              Palace ID allows you to log in and manage the services of all our
-              brands from the same account.
+              <button class="underline" @click="showPalaceIdDialog = true">
+                Palace ID
+              </button>
+              allows you to log in and manage the services of all our brands
+              from the same account.
             </p>
           </div>
 
