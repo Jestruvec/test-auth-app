@@ -249,11 +249,11 @@ watch(step, (newStep) => {
 
         <div class="space-y-3 text-center" style="text-wrap: balance">
           <p class="tpc-typography-title-s text-tpc-fg-default">
-            ¿Qué es Palace ID?
+            What is Palace ID?
           </p>
           <p class="tpc-typography-body-m text-tpc-fg-default">
-            Palace ID te permite iniciar sesión y administrar los servicios de
-            todas nuestras marcas desde la misma cuenta.
+            Palace ID allows you to log in and manage services across all our
+            brands using a single account.
           </p>
         </div>
 
