@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, watch } from "vue";
+import { ref, watch, computed } from "vue";
 import { useForm, useField } from "vee-validate";
 import { toTypedSchema } from "@vee-validate/zod";
 import { useStore } from "@nanostores/vue";
@@ -54,6 +54,13 @@ const email = useField<string>("email", undefined, {
 const password = useField<string>("password");
 
 const showExistingAccountBanner = ref(false);
+
+const isFormValid = computed(
+  () =>
+    meta.value.valid &&
+    email.value.value.trim() !== "" &&
+    password.value.value.trim() !== ""
+);
 
 const onSubmit = handleSubmit(async (loginData) => {
   const session = await login(loginData);
@@ -232,7 +239,7 @@ watch(
                 size="large"
                 label="Log in"
                 :loading="isLoading"
-                :disabled="!meta.valid"
+                :disabled="!isFormValid"
               />
 
               <p

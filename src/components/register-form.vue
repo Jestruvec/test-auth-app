@@ -115,7 +115,14 @@ const palaceIdFeatures = [
 ];
 
 const isStep1Valid = computed(() => {
-  return email.meta.valid && firstName.meta.valid && lastName.meta.valid;
+  return (
+    email.meta.valid &&
+    firstName.meta.valid &&
+    lastName.meta.valid &&
+    email.value.value.trim() !== "" &&
+    firstName.value.value.trim() !== "" &&
+    lastName.value.value.trim() !== ""
+  );
 });
 
 const isStep2Valid = computed(() => {

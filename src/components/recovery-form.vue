@@ -73,7 +73,7 @@ const { passwordValidations, passwordProgress, passwordStrength } =
   usePasswordValidation(password.value);
 
 const isStep1Valid = computed(() => {
-  return email.meta.valid;
+  return email.meta.valid && email.value.value.trim() !== "";
 });
 const isStep2Valid = computed(() => {
   return password.meta.valid && passwordConfirm.meta.valid;
