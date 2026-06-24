@@ -107,51 +107,57 @@ onMounted(startOtpTimer);
           Validating...
         </div>
 
-        <Banner
-          v-if="isOtpError && !hasMaxAttemptsReached"
-          severity="danger"
-          class="text-tpc-fg-danger"
-        >
-          <div class="flex gap-4 items-center">
-            <img :src="IconAlertCircle.src" alt="alert icon" />
-            <p class="tpc-typography-body-xs text-tpc-fg-danger">
-              Incorrect code. {{ remainingAttempts }}
-              {{ remainingAttempts === 1 ? "attempt" : "attempts" }}
-              remaining.
-            </p>
-          </div>
-        </Banner>
+        <Transition name="fade">
+          <Banner
+            v-if="isOtpError && !hasMaxAttemptsReached"
+            severity="danger"
+            class="text-tpc-fg-danger"
+          >
+            <div class="flex gap-4 items-center">
+              <img :src="IconAlertCircle.src" alt="alert icon" />
+              <p class="tpc-typography-body-xs text-tpc-fg-danger">
+                Incorrect code. {{ remainingAttempts }}
+                {{ remainingAttempts === 1 ? "attempt" : "attempts" }}
+                remaining.
+              </p>
+            </div>
+          </Banner>
+        </Transition>
 
-        <Banner
-          v-if="hasMaxAttemptsReached"
-          severity="danger"
-          class="text-tpc-fg-danger"
-        >
-          <div class="flex gap-4 items-center">
-            <img :src="IconAlertCircle.src" alt="alert icon" />
-            <p class="tpc-typography-body-xs text-tpc-fg-danger">
-              Too many attempts. Please request a new code or try again later.
-            </p>
-          </div>
-        </Banner>
+        <Transition name="fade">
+          <Banner
+            v-if="hasMaxAttemptsReached"
+            severity="danger"
+            class="text-tpc-fg-danger"
+          >
+            <div class="flex gap-4 items-center">
+              <img :src="IconAlertCircle.src" alt="alert icon" />
+              <p class="tpc-typography-body-xs text-tpc-fg-danger">
+                Too many attempts. Please request a new code or try again later.
+              </p>
+            </div>
+          </Banner>
+        </Transition>
 
-        <Banner
-          v-if="showResendSuccess"
-          severity="positive"
-          class="text-tpc-fg-positive"
-        >
-          <div class="flex gap-4 items-center">
-            <img
-              :src="IconCircleCheckFilled.src"
-              alt="alert icon"
-              class="h-5 w-5"
-            />
+        <Transition name="fade">
+          <Banner
+            v-if="showResendSuccess"
+            severity="positive"
+            class="text-tpc-fg-positive"
+          >
+            <div class="flex gap-4 items-center">
+              <img
+                :src="IconCircleCheckFilled.src"
+                alt="alert icon"
+                class="h-5 w-5"
+              />
 
-            <p class="tpc-typography-body-xs text-tpc-fg-positive">
-              A new code has been sent to your email.
-            </p>
-          </div>
-        </Banner>
+              <p class="tpc-typography-body-xs text-tpc-fg-positive">
+                A new code has been sent to your email.
+              </p>
+            </div>
+          </Banner>
+        </Transition>
 
         <p
           v-if="otpTimeRemaining === 0 && !isValidatingOtp"
@@ -182,3 +188,15 @@ onMounted(startOtpTimer);
     </div>
   </article>
 </template>
+
+<style scoped>
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.3s ease;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+}
+</style>

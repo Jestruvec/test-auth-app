@@ -198,19 +198,21 @@ onMounted(() => {
           </div>
 
           <div class="flex flex-col gap-4">
-            <Banner
-              v-if="isInvalidParameterError"
-              severity="danger"
-              class="text-tpc-fg-danger"
-            >
-              <div class="flex gap-4 items-center">
-                <img :src="IconAlertCircle.src" alt="alert icon" />
-                <p class="tpc-typography-body-xs text-tpc-fg-danger">
-                  Cannot reset password for the user as there is no
-                  registered/verified email.
-                </p>
-              </div>
-            </Banner>
+            <Transition name="fade">
+              <Banner
+                v-if="isInvalidParameterError"
+                severity="danger"
+                class="text-tpc-fg-danger"
+              >
+                <div class="flex gap-4 items-center">
+                  <img :src="IconAlertCircle.src" alt="alert icon" />
+                  <p class="tpc-typography-body-xs text-tpc-fg-danger">
+                    Cannot reset password for the user as there is no
+                    registered/verified email.
+                  </p>
+                </div>
+              </Banner>
+            </Transition>
 
             <Button
               class="rounded-full"
@@ -372,6 +374,16 @@ onMounted(() => {
 
 .slide-leave-to {
   transform: translateX(-100%);
+  opacity: 0;
+}
+
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.3s ease;
+}
+
+.fade-enter-from,
+.fade-leave-to {
   opacity: 0;
 }
 

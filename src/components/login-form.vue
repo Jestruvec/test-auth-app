@@ -218,19 +218,21 @@ watch(
             </div>
 
             <div class="flex flex-col gap-4">
-              <Banner
-                v-if="isNotAuthorizedError"
-                severity="danger"
-                class="text-tpc-fg-danger"
-              >
-                <div class="flex gap-4 items-center">
-                  <img :src="IconAlertCircle.src" alt="alert icon" />
+              <Transition name="fade">
+                <Banner
+                  v-if="isNotAuthorizedError"
+                  severity="danger"
+                  class="text-tpc-fg-danger"
+                >
+                  <div class="flex gap-4 items-center">
+                    <img :src="IconAlertCircle.src" alt="alert icon" />
 
-                  <p class="tpc-typography-body-s text-tpc-fg-danger">
-                    Incorrect email or password.
-                  </p>
-                </div>
-              </Banner>
+                    <p class="tpc-typography-body-s text-tpc-fg-danger">
+                      Incorrect email or password.
+                    </p>
+                  </div>
+                </Banner>
+              </Transition>
 
               <Button
                 class="rounded-full"
@@ -280,6 +282,16 @@ watch(
 
 .slide-leave-to {
   transform: translateX(-100%);
+  opacity: 0;
+}
+
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.3s ease;
+}
+
+.fade-enter-from,
+.fade-leave-to {
   opacity: 0;
 }
 </style>
