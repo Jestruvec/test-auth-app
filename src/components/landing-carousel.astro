@@ -138,6 +138,49 @@ const { slides } = Astro.props;
     }
   };
 
+  // Touch gesture handling
+  let touchStartX = 0;
+  let touchEndX = 0;
+  const minSwipeDistance = 50;
+
+  const handleTouchStart = (e) => {
+    touchStartX = e.changedTouches[0].screenX;
+  };
+
+  const handleTouchEnd = (e) => {
+    touchEndX = e.changedTouches[0].screenX;
+    handleSwipe();
+  };
+
+  const handleSwipe = () => {
+    const swipeDistance = touchEndX - touchStartX;
+
+    if (Math.abs(swipeDistance) < minSwipeDistance) return;
+
+    if (swipeDistance > 0) {
+      // Swipe right - go to previous slide
+      prevSlide();
+    } else {
+      // Swipe left - go to next slide
+      nextSlide();
+    }
+
+    // Reset auto-advance interval on swipe
+    clearInterval(autoAdvanceInterval);
+    autoAdvanceInterval = setInterval(nextSlide, 5000);
+  };
+
+  // Attach touch handlers to carousel container
+  const landingContent = document.getElementById("landing-content");
+  if (landingContent) {
+    landingContent.addEventListener("touchstart", handleTouchStart, {
+      passive: true,
+    });
+    landingContent.addEventListener("touchend", handleTouchEnd, {
+      passive: true,
+    });
+  }
+
   // Attach click handlers to slide indicators
   let autoAdvanceInterval = setInterval(nextSlide, 5000);
   const indicators = document.querySelectorAll(".slide-indicator");
