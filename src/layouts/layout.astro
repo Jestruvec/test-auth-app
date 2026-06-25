@@ -1,10 +1,12 @@
 ---
 import "@/assets/styles/index.css";
 import { ClientRouter } from "astro:transitions";
+
+const currentLang = Astro.currentLocale ?? "en";
 ---
 
 <!doctype html>
-<html lang="en">
+<html lang={currentLang}>
   <head>
     <meta charset="UTF-8" />
     <meta
@@ -14,7 +16,7 @@ import { ClientRouter } from "astro:transitions";
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="icon" href="/favicon.ico" />
     <meta name="generator" content={Astro.generator} />
-    <title>Astro Basics</title>
+    <title>Palace ID</title>
     <ClientRouter />
   </head>
   <body data-theme="palace">

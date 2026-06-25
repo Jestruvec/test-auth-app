@@ -1,9 +1,15 @@
 ---
+import { getTranslations } from "@/i18n/utilities";
+import { ui } from "@/i18n/ui";
+
+const currentLang = (Astro.currentLocale ?? "en") as "en" | "es";
+const t = getTranslations(currentLang);
+
 const features = [
   {
     icon: "user-circle",
-    title: "Tu perfil, en todas partes",
-    description: "Preferencias y favoritos siempre contigo.",
+    title: t.complete.features.profile.title,
+    description: t.complete.features.profile.description,
     paths: [
       "M3 12a9 9 0 1 0 18 0a9 9 0 1 0 -18 0",
       "M9 10a3 3 0 1 0 6 0a3 3 0 1 0 -6 0",
@@ -12,8 +18,8 @@ const features = [
   },
   {
     icon: "calendar-check",
-    title: "Tus estancias en un solo lugar",
-    description: "Reservas pasadas, actuales y futuras",
+    title: t.complete.features.stays.title,
+    description: t.complete.features.stays.description,
     paths: [
       "M11.5 21h-5.5a2 2 0 0 1 -2 -2v-12a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v6",
       "M16 3v4",
@@ -24,8 +30,8 @@ const features = [
   },
   {
     icon: "shield-lock",
-    title: "Seguro y privado",
-    description: "Tus datos protegidos y sin compartir.",
+    title: t.complete.features.security.title,
+    description: t.complete.features.security.description,
     paths: [
       "M12 3a12 12 0 0 0 8.5 3a12 12 0 0 1 -8.5 15a12 12 0 0 1 -8.5 -15a12 12 0 0 0 8.5 -3",
       "M11 11a1 1 0 1 0 2 0a1 1 0 1 0 -2 0",
@@ -56,10 +62,11 @@ const features = [
       </div>
 
       <div class="text-white text-center space-y-1.5">
-        <p class="tpc-typography-title-m">Welcome Jon</p>
+        <p class="tpc-typography-title-m">
+          {t.complete.welcome}
+        </p>
         <p class="tpc-typography-body-m">
-          Your Palace ID has been created, your account is ready to start
-          enjoying it.
+          {t.complete.description}
         </p>
       </div>
 
@@ -110,7 +117,7 @@ const features = [
     </div>
 
     <button id="done-btn" class="py-4 px-5.5 bg-white rounded-full">
-      Done
+      {t.complete.doneButton}
     </button>
   </div>
 </div>

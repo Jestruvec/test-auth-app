@@ -11,6 +11,7 @@ import {
 import { useOtp } from "@/composables/use-otp";
 import IconAlertCircle from "@assets/svg/alert-circle.svg";
 import IconCircleCheckFilled from "@assets/svg/circle-check-filled.svg";
+import type { ui } from "@/i18n/ui";
 
 import { maskEmail } from "@/utils/email-mask";
 
@@ -19,14 +20,12 @@ interface Properties {
   validateOtpFn: (code: string) => Promise<void>;
   resendCodeFn: (email: string) => Promise<void>;
   isOtpError: boolean;
-  title?: string;
+  t: (typeof ui)[keyof typeof ui]["otp"];
 }
 
 type Emits = (event: "success") => void;
 
-const properties = withDefaults(defineProps<Properties>(), {
-  title: "Verify your email",
-});
+const properties = defineProps<Properties>();
 const emit = defineEmits<Emits>();
 
 const {
@@ -77,10 +76,10 @@ onMounted(startOtpTimer);
     <div>
       <div class="space-y-2 mb-8 text-center px-4">
         <h2 class="tpc-typography-title-m text-tpc-fg-default">
-          {{ properties.title }}
+          {{ properties.t.title }}
         </h2>
         <p class="tpc-typography-body-m text-tpc-fg-default">
-          Enter the 6-digit code we sent to {{ maskedEmail }}
+          {{ properties.t.description.replace("{email}", maskedEmail) }}
         </p>
       </div>
 
@@ -104,7 +103,7 @@ onMounted(startOtpTimer);
               stroke: var(--color-fg-accent);
             "
           />
-          Validating...
+          {{ properties.t.validating }}
         </div>
 
         <Transition name="fade">
@@ -116,9 +115,12 @@ onMounted(startOtpTimer);
             <div class="flex gap-4 items-center">
               <img :src="IconAlertCircle.src" alt="alert icon" />
               <p class="tpc-typography-body-xs text-tpc-fg-danger">
-                Incorrect code. {{ remainingAttempts }}
-                {{ remainingAttempts === 1 ? "attempt" : "attempts" }}
-                remaining.
+                {{
+                  properties.t.errorIncorrect.replace(
+                    "{count}",
+                    String(remainingAttempts)
+                  )
+                }}
               </p>
             </div>
           </Banner>
@@ -133,7 +135,7 @@ onMounted(startOtpTimer);
             <div class="flex gap-4 items-center">
               <img :src="IconAlertCircle.src" alt="alert icon" />
               <p class="tpc-typography-body-xs text-tpc-fg-danger">
-                Too many attempts. Please request a new code or try again later.
+                {{ properties.t.errorTooMany }}
               </p>
             </div>
           </Banner>
@@ -153,7 +155,7 @@ onMounted(startOtpTimer);
               />
 
               <p class="tpc-typography-body-xs text-tpc-fg-positive">
-                A new code has been sent to your email.
+                {{ properties.t.successResent }}
               </p>
             </div>
           </Banner>
@@ -163,14 +165,14 @@ onMounted(startOtpTimer);
           v-if="otpTimeRemaining === 0 && !isValidatingOtp"
           class="tpc-typography-body-xs text-tpc-fg-danger"
         >
-          Code expired
+          {{ properties.t.codeExpired }}
         </p>
 
         <p
           v-else-if="!isValidatingOtp && !hasMaxAttemptsReached"
           class="tpc-typography-body-m text-tpc-fg-default"
         >
-          The code expires in {{ otpTimeFormatted }}
+          {{ properties.t.expiresIn.replace("{time}", otpTimeFormatted) }}
         </p>
       </div>
     </div>
@@ -178,12 +180,18 @@ onMounted(startOtpTimer);
     <div class="flex justify-center">
       <Button
         v-if="canResendCode"
-        :label="otpTimeRemaining === 0 ? 'Request a new code' : 'Resend code'"
+        :label="
+          otpTimeRemaining === 0
+            ? properties.t.requestNewButton
+            : properties.t.resendButton
+        "
         link
         @click="resendOtp(properties.email)"
       />
       <p v-else class="tpc-typography-body-m text-tpc-fg-default">
-        You can request a new code in {{ resendCooldownFormatted }}
+        {{
+          properties.t.resendCooldown.replace("{time}", resendCooldownFormatted)
+        }}
       </p>
     </div>
   </article>

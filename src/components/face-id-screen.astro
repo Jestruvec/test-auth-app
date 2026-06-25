@@ -1,6 +1,10 @@
 ---
 import { Image } from "astro:assets";
 import FaceId from "@assets/images/face-id.png";
+import { getTranslations } from "@/i18n/utilities";
+
+const currentLang = (Astro.currentLocale ?? "en") as "en" | "es";
+const t = getTranslations(currentLang);
 ---
 
 <div class="h-full flex flex-col safe-area-inset">
@@ -26,11 +30,10 @@ import FaceId from "@assets/images/face-id.png";
     <div class="flex flex-col gap-6 flex-1">
       <div class="space-y-3">
         <p class="tpc-typography-title-m text-tpc-fg-default">
-          Inicia sesión más rápido con Face ID
+          {t.faceId.title}
         </p>
         <p class="tpc-typography-body-m text-tpc-fg-default">
-          Puedes iniciar sesión en la app de forma instantánea y segura con
-          datos biométricos.
+          {t.faceId.description}
         </p>
       </div>
 
@@ -56,7 +59,7 @@ import FaceId from "@assets/images/face-id.png";
         </div>
 
         <p class="tpc-typography-body-s text-tpc-fg-default">
-          Puedes desactivarlo en cualquier momento desde la configuración.
+          {t.faceId.info}
         </p>
       </div>
     </div>
@@ -65,9 +68,11 @@ import FaceId from "@assets/images/face-id.png";
         id="enable-faceid-btn"
         class="py-4 px-5.5 bg-[#183456] rounded-full text-white"
       >
-        Habilitar Face ID
+        {t.faceId.enableButton}
       </button>
-      <button id="skip-faceid-btn" class="underline"> Omitir por ahora </button>
+      <button id="skip-faceid-btn" class="underline">
+        {t.faceId.skipButton}
+      </button>
     </div>
   </div>
 </div>

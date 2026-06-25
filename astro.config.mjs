@@ -11,6 +11,14 @@ export default defineConfig({
       appEntrypoint: "/src/app.ts",
     }),
   ],
+  output: "static",
+  i18n: {
+    defaultLocale: "en",
+    locales: ["en", "es"],
+    routing: {
+      prefixDefaultLocale: true,
+    },
+  },
   vite: {
     plugins: [tailwindcss()],
     resolve: {

@@ -1,0 +1,15 @@
+---
+import Layout from "@/layouts/layout.astro";
+import RecoveryForm from "@/components/recovery-form.vue";
+import { getTranslations } from "@/i18n/utilities";
+import { defaultLang, ui } from "@/i18n/ui";
+
+const currentLang = (Astro.currentLocale ?? defaultLang) as keyof typeof ui;
+const t = getTranslations(currentLang);
+---
+
+<Layout>
+  <div id="recovery-form" class="fixed inset-0 z-40 bg-tpc-bg-default">
+    <RecoveryForm client:load t={t.recovery} tPassword={t.passwordStrength} lang={currentLang as "en" | "es"} />
+  </div>
+</Layout>

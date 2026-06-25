@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from "vue";
 import { useUrlSearchParams } from "@vueuse/core";
+import type { ui } from "@/i18n/ui";
 
 import { useForm, useField } from "vee-validate";
 import { toTypedSchema } from "@vee-validate/zod";
@@ -31,6 +32,12 @@ import IconAlertCircle from "@assets/svg/alert-circle.svg";
 import IconEmailSent from "@assets/svg/email-sent.svg";
 
 import { maskEmail } from "@/utils/email-mask";
+
+const properties = defineProps<{
+  t: (typeof ui)[keyof typeof ui]["recovery"];
+  tPassword: (typeof ui)[keyof typeof ui]["passwordStrength"];
+  lang: "en" | "es";
+}>();
 
 // Si el usuario llega desde el link del correo (/recovery?email=&code=),
 // arrancamos directo en el paso de nueva contraseña con email+code precargados.
@@ -100,13 +107,13 @@ const handlePasswordResetConfirmation = async () => {
 };
 
 const goToLogin = async () => {
-  await navigate("/login");
+  await navigate(`/${properties.lang}/login`);
 };
 
 const handleBack = async () => {
   switch (step.value) {
     case "email": {
-      await navigate("/login");
+      await navigate(`/${properties.lang}/login`);
       break;
     }
     case "email-sent": {
@@ -156,7 +163,7 @@ onMounted(() => {
       </button>
 
       <h2 class="tpc-typography-label-m bg text-tpc-fg-default">
-        Password recovery
+        {{ properties.t.headerTitle }}
       </h2>
       <div />
     </div>
@@ -173,11 +180,10 @@ onMounted(() => {
           <div class="flex flex-col gap-8">
             <div class="space-y-2 text-center">
               <h2 class="tpc-typography-title-m text-tpc-fg-default">
-                Forgot your password?
+                {{ properties.t.forgotTitle }}
               </h2>
               <p class="tpc-typography-body-m text-tpc-fg-default">
-                Enter the email associated with your Palace ID and we will send
-                you a code to reset it.
+                {{ properties.t.forgotDescription }}
               </p>
             </div>
 
@@ -189,7 +195,10 @@ onMounted(() => {
                   type="email"
                   :invalid="!!email.errorMessage.value"
                 />
-                <InputLabel label-value="Email address" for="email" />
+                <InputLabel
+                  :label-value="properties.t.emailLabel"
+                  for="email"
+                />
               </FloatLabel>
               <Message v-if="errors.email" severity="danger">
                 {{ errors.email }}
@@ -207,8 +216,7 @@ onMounted(() => {
                 <div class="flex gap-4 items-center">
                   <img :src="IconAlertCircle.src" alt="alert icon" />
                   <p class="tpc-typography-body-xs text-tpc-fg-danger">
-                    Cannot reset password for the user as there is no
-                    registered/verified email.
+                    {{ properties.t.errorNoEmail }}
                   </p>
                 </div>
               </Banner>
@@ -218,7 +226,7 @@ onMounted(() => {
               class="rounded-full"
               severity="primary"
               size="large"
-              label="Send code"
+              :label="properties.t.sendCodeButton"
               :disabled="!isStep1Valid"
               :loading="isLoading"
               @click="proceedToEmailSent"
@@ -238,11 +246,15 @@ onMounted(() => {
 
             <div class="space-y-2 text-center">
               <h2 class="tpc-typography-title-m text-tpc-fg-default">
-                Check your email
+                {{ properties.t.checkEmailTitle }}
               </h2>
               <p class="tpc-typography-body-m text-tpc-fg-default">
-                If an account associated with {{ maskedEmail }} exists, you will
-                receive an email with a link to reset your password.
+                {{
+                  properties.t.checkEmailDescription.replace(
+                    "{email}",
+                    maskedEmail
+                  )
+                }}
               </p>
             </div>
 
@@ -253,7 +265,7 @@ onMounted(() => {
             class="rounded-full"
             severity="secondary"
             size="large"
-            label="Open email App"
+            :label="properties.t.openEmailButton"
           />
         </article>
 
@@ -266,10 +278,10 @@ onMounted(() => {
           <div class="flex-1 flex flex-col justify-center">
             <div class="space-y-2 mb-8 text-center">
               <h2 class="tpc-typography-title-m text-tpc-fg-default">
-                Set your new password
+                {{ properties.t.newPasswordTitle }}
               </h2>
               <p class="tpc-typography-body-m text-tpc-fg-default">
-                Set your new password, which you have not used before.
+                {{ properties.t.newPasswordDescription }}
               </p>
             </div>
 
@@ -283,7 +295,10 @@ onMounted(() => {
                   :invalid="!!password.errorMessage.value"
                 />
 
-                <InputLabel label-value="Contraseña" for="password" />
+                <InputLabel
+                  :label-value="properties.t.passwordLabel"
+                  for="password"
+                />
               </FloatLabel>
             </FormField>
 
@@ -291,6 +306,7 @@ onMounted(() => {
               :validations="passwordValidations"
               :progress="passwordProgress"
               :strength="passwordStrength"
+              :t="properties.tPassword"
             />
 
             <!-- Password Confirmation -->
@@ -304,7 +320,7 @@ onMounted(() => {
                 />
 
                 <InputLabel
-                  label-value="Confirma la contraseña"
+                  :label-value="properties.t.confirmPasswordLabel"
                   for="password-confirm"
                 />
               </FloatLabel>
@@ -321,7 +337,7 @@ onMounted(() => {
             class="rounded-full"
             severity="primary"
             size="large"
-            label="Save new password"
+            :label="properties.t.savePasswordButton"
             :loading="isLoading"
             :disabled="!isStep2Valid"
             @click="handlePasswordResetConfirmation"
@@ -340,11 +356,10 @@ onMounted(() => {
           >
             <img :src="IconCheckCircleFilled.src" alt="Icon Check" />
             <h2 class="tpc-typography-title-m text-tpc-fg-default">
-              Password reset
+              {{ properties.t.completeTitle }}
             </h2>
             <p class="tpc-typography-body-m text-tpc-fg-default">
-              Your password has been updated successfully. You can now log in
-              with your new password.
+              {{ properties.t.completeDescription }}
             </p>
           </div>
 
@@ -352,7 +367,7 @@ onMounted(() => {
             class="rounded-full"
             severity="primary"
             size="large"
-            label="Log in"
+            :label="properties.t.loginButton"
             @click="goToLogin"
           />
         </article>

@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, ref, watch } from "vue";
+import type { ui } from "@/i18n/ui";
 
 import { useForm, useField } from "vee-validate";
 import { toTypedSchema } from "@vee-validate/zod";
@@ -38,6 +39,13 @@ import { navigate } from "astro:transitions/client";
 
 import { setPrefillEmail } from "@/stores/auth.store";
 import PalaceIdLogo from "@components/palace-id-logo.vue";
+
+const properties = defineProps<{
+  t: (typeof ui)[keyof typeof ui]["register"];
+  tOtp: (typeof ui)[keyof typeof ui]["otp"];
+  tPassword: (typeof ui)[keyof typeof ui]["passwordStrength"];
+  lang: "en" | "es";
+}>();
 
 type StepType = "email" | "password" | "otp";
 const step = ref<StepType>("email");
@@ -91,28 +99,28 @@ const brands = [
   { logo: PalaceEliteLogoSm, name: "Palace Elite" },
 ];
 
-const palaceIdFeatures = [
+const palaceIdFeatures = computed(() => [
   {
-    label: "Universal Access",
-    description: "Access and manage all our services from a single account.",
+    label: properties.t.palaceIdFeatures.universalAccess.label,
+    description: properties.t.palaceIdFeatures.universalAccess.description,
     icon: IconKey,
   },
   {
-    label: "Your profile, everywhere",
-    description: "Preferences and favorites always with you",
+    label: properties.t.palaceIdFeatures.profile.label,
+    description: properties.t.palaceIdFeatures.profile.description,
     icon: IconUserCircle,
   },
   {
-    label: "All your stays in one place",
-    description: "Past, current, and future reservations",
+    label: properties.t.palaceIdFeatures.stays.label,
+    description: properties.t.palaceIdFeatures.stays.description,
     icon: IconCalendar,
   },
   {
-    label: "Secure and private",
-    description: "Your data is protected and never shared.",
+    label: properties.t.palaceIdFeatures.security.label,
+    description: properties.t.palaceIdFeatures.security.description,
     icon: IconShieldLock,
   },
-];
+]);
 
 const isStep1Valid = computed(() => {
   return (
@@ -180,12 +188,12 @@ const handleCloseClick = async () => {
   if (hasFormData.value) {
     showConfirmationDialog.value = true;
   } else {
-    await navigate("/");
+    await navigate(`/${properties.lang}/`);
   }
 };
 
 const confirmCancel = async () => {
-  await navigate("/");
+  await navigate(`/${properties.lang}/`);
 };
 
 // Redirect to login if email already exists
@@ -193,7 +201,7 @@ watch(isUsernameExistsError, async (isError) => {
   if (!isError) return;
 
   setPrefillEmail(email.value.value);
-  await navigate("/login");
+  await navigate(`/${properties.lang}/login`);
 });
 
 // Reset password field when navigating to password step
@@ -217,10 +225,10 @@ watch(step, (newStep) => {
       <div class="flex flex-col gap-8 pt-8">
         <div class="space-y-3 text-center">
           <p class="tpc-typography-title-s text-tpc-fg-default">
-            Cancel Sign Up?
+            {{ properties.t.cancelTitle }}
           </p>
           <p class="tpc-typography-body-m text-tpc-fg-default text-center">
-            Your progress will be lost. You will have to start over if you exit.
+            {{ properties.t.cancelMessage }}
           </p>
         </div>
 
@@ -228,14 +236,14 @@ watch(step, (newStep) => {
           <Button
             severity="danger"
             size="large"
-            label="Cancel and exit"
+            :label="properties.t.cancelAndExitButton"
             class="rounded-full"
             @click="confirmCancel"
           />
           <Button
             severity="secondary"
             size="large"
-            label="Continue"
+            :label="properties.t.continueModalButton"
             class="rounded-full"
             @click="showConfirmationDialog = false"
           />
@@ -249,11 +257,10 @@ watch(step, (newStep) => {
 
         <div class="space-y-3 text-center" style="text-wrap: balance">
           <p class="tpc-typography-title-s text-tpc-fg-default">
-            What is Palace ID?
+            {{ properties.t.palaceIdDialogTitle }}
           </p>
           <p class="tpc-typography-body-m text-tpc-fg-default">
-            Palace ID allows you to log in and manage services across all our
-            brands using a single account.
+            {{ properties.t.palaceIdDialogDescription }}
           </p>
         </div>
 
@@ -284,7 +291,7 @@ watch(step, (newStep) => {
           type="submit"
           severity="secondary"
           size="large"
-          label="Understood"
+          :label="properties.t.understoodButton"
           @click="showPalaceIdDialog = false"
         />
       </div>
@@ -298,7 +305,9 @@ watch(step, (newStep) => {
       >
         <img :src="IconX.src" alt="close icon" />
       </button>
-      <h2 class="tpc-typography-label-m bg text-tpc-fg-default">Sign up</h2>
+      <h2 class="tpc-typography-label-m bg text-tpc-fg-default">
+        {{ properties.t.headerTitle }}
+      </h2>
       <div />
     </div>
 
@@ -335,14 +344,13 @@ watch(step, (newStep) => {
 
           <div class="space-y-2 mb-8 text-center">
             <h2 class="tpc-typography-title-m text-tpc-fg-default">
-              Create your account
+              {{ properties.t.title }}
             </h2>
             <p class="tpc-typography-body-m text-tpc-fg-default">
               <button class="underline" @click="showPalaceIdDialog = true">
-                Palace ID
+                {{ properties.t.palaceIdLink }}
               </button>
-              allows you to log in and manage the services of all our brands
-              from the same account.
+              {{ properties.t.description }}
             </p>
           </div>
 
@@ -357,7 +365,10 @@ watch(step, (newStep) => {
                     type="email"
                     :invalid="!!email.errorMessage.value"
                   />
-                  <InputLabel label-value="Email" for="email" />
+                  <InputLabel
+                    :label-value="properties.t.emailLabel"
+                    for="email"
+                  />
                 </FloatLabel>
                 <Message v-if="errors.email" severity="danger">
                   {{ errors.email }}
@@ -372,7 +383,10 @@ watch(step, (newStep) => {
                     v-model="firstName.value.value"
                     :invalid="!!firstName.errorMessage.value"
                   />
-                  <InputLabel label-value="First name" for="firstName" />
+                  <InputLabel
+                    :label-value="properties.t.firstNameLabel"
+                    for="firstName"
+                  />
                 </FloatLabel>
                 <Message v-if="errors.firstName" severity="danger">
                   {{ errors.firstName }}
@@ -387,7 +401,10 @@ watch(step, (newStep) => {
                     v-model="lastName.value.value"
                     :invalid="!!lastName.errorMessage.value"
                   />
-                  <InputLabel label-value="Last name(s)" for="lastName" />
+                  <InputLabel
+                    :label-value="properties.t.lastNameLabel"
+                    for="lastName"
+                  />
                 </FloatLabel>
                 <Message v-if="errors.lastName" severity="danger">
                   {{ errors.lastName }}
@@ -399,7 +416,7 @@ watch(step, (newStep) => {
               class="rounded-full"
               severity="primary"
               size="large"
-              label="Continue"
+              :label="properties.t.continueButton"
               :disabled="!isStep1Valid"
               :loading="isLoading"
               @click="proceedToPassword"
@@ -433,10 +450,10 @@ watch(step, (newStep) => {
           <div class="flex flex-col">
             <div class="space-y-2 mb-8 text-center">
               <h2 class="tpc-typography-title-m text-tpc-fg-default">
-                Create your password
+                {{ properties.t.passwordTitle }}
               </h2>
               <p class="tpc-typography-body-m text-tpc-fg-default">
-                Define a secure password to keep your account safe.
+                {{ properties.t.passwordDescription }}
               </p>
             </div>
 
@@ -450,7 +467,10 @@ watch(step, (newStep) => {
                   :invalid="!!password.errorMessage.value"
                 />
 
-                <InputLabel label-value="Contraseña" for="password" />
+                <InputLabel
+                  :label-value="properties.t.passwordLabel"
+                  for="password"
+                />
               </FloatLabel>
             </FormField>
 
@@ -458,6 +478,7 @@ watch(step, (newStep) => {
               :validations="passwordValidations"
               :progress="passwordProgress"
               :strength="passwordStrength"
+              :t="properties.tPassword"
             />
 
             <!-- Password Confirmation -->
@@ -471,7 +492,7 @@ watch(step, (newStep) => {
                 />
 
                 <InputLabel
-                  label-value="Confirma la contraseña"
+                  :label-value="properties.t.confirmPasswordLabel"
                   for="password-confirm"
                 />
               </FloatLabel>
@@ -488,15 +509,15 @@ watch(step, (newStep) => {
             <p
               class="tpc-typography-body-s text-tpc-fg-default text-center px-4"
             >
-              By creating a Palace ID, you agree to our
-              <span class="underline">Terms of Use</span> and
-              <span class="underline">Privacy Policy</span>
+              {{ properties.t.termsText }}
+              <span class="underline">{{ properties.t.termsLink }}</span>
+              <span class="underline">{{ properties.t.privacyLink }}</span>
             </p>
             <Button
               class="rounded-full"
               severity="primary"
               size="large"
-              label="Create my palace ID"
+              :label="properties.t.createButton"
               :loading="isLoading"
               :disabled="!isStep2Valid"
               @click="proceedToOtp"
@@ -512,6 +533,7 @@ watch(step, (newStep) => {
           :validate-otp-fn="validateOtp"
           :resend-code-fn="resendCode"
           :is-otp-error="isOtpError"
+          :t="properties.tOtp"
           @success="onOtpSuccess"
         />
       </Transition>

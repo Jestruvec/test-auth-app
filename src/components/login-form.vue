@@ -21,8 +21,15 @@ import type { AuthSession } from "@domain/types/auth-session";
 import IconX from "@assets/svg/x.svg";
 import IconAlertCircle from "@assets/svg/alert-circle.svg";
 import IconCircleCheck from "@assets/svg/circle-check.svg";
+import type { ui } from "@/i18n/ui";
 
 import { prefillEmailStore, clearPrefillEmail } from "@/stores/auth.store";
+
+const properties = defineProps<{
+  t: (typeof ui)[keyof typeof ui]["login"];
+  tOtp: (typeof ui)[keyof typeof ui]["otp"];
+  lang: "en" | "es";
+}>();
 
 type StepType = "login" | "otp";
 const step = ref<StepType>("login");
@@ -155,11 +162,10 @@ watch(
 
           <div class="space-y-2 text-center">
             <h2 class="tpc-typography-title-m text-tpc-fg-default">
-              Welcome back
+              {{ properties.t.title }}
             </h2>
             <p class="tpc-typography-body-m text-tpc-fg-default">
-              Use your Palace ID to log in. If you are a member, use your Palace
-              Elite account.
+              {{ properties.t.description }}
             </p>
           </div>
 
@@ -173,7 +179,7 @@ watch(
                   <img :src="IconCircleCheck.src" alt="check icon" />
 
                   <p class="tpc-typography-body-s text-tpc-fg-default">
-                    You already have an account. Enter your password to log in.
+                    {{ properties.t.existingAccountBanner }}
                   </p>
                 </div>
               </Banner>
@@ -188,7 +194,10 @@ watch(
                     :invalid="!!email.errorMessage.value"
                     :disabled="isLoading"
                   />
-                  <InputLabel label-value="Email" for="Correo electronico" />
+                  <InputLabel
+                    :label-value="properties.t.emailLabel"
+                    for="email"
+                  />
                 </FloatLabel>
                 <Message v-if="errors.email" severity="danger">
                   {{ errors.email }}
@@ -205,15 +214,18 @@ watch(
                     :invalid="!!password.errorMessage.value"
                   />
 
-                  <InputLabel label-value="Contraseña" for="password" />
+                  <InputLabel
+                    :label-value="properties.t.passwordLabel"
+                    for="password"
+                  />
                 </FloatLabel>
               </FormField>
 
               <a
-                href="/recovery"
+                :href="`/${properties.lang}/recovery`"
                 class="underline tpc-typography-body-s text-tpc-fg-default"
               >
-                Forgot your password?
+                {{ properties.t.forgotPasswordLink }}
               </a>
             </div>
 
@@ -228,7 +240,7 @@ watch(
                     <img :src="IconAlertCircle.src" alt="alert icon" />
 
                     <p class="tpc-typography-body-s text-tpc-fg-danger">
-                      Incorrect email or password.
+                      {{ properties.t.errorInvalid }}
                     </p>
                   </div>
                 </Banner>
@@ -239,7 +251,7 @@ watch(
                 type="submit"
                 severity="primary"
                 size="large"
-                label="Log in"
+                :label="properties.t.submitButton"
                 :loading="isLoading"
                 :disabled="!isFormValid"
               />
@@ -247,8 +259,10 @@ watch(
               <p
                 class="tpc-typography-body-s text-tpc-fg-default text-center px-4"
               >
-                Don't have an account?
-                <a href="/register" class="underline">Sign up</a>
+                {{ properties.t.noAccountText }}
+                <a :href="`/${properties.lang}/register`" class="underline">
+                  {{ properties.t.signUpLink }}
+                </a>
               </p>
             </div>
           </form>
@@ -262,6 +276,7 @@ watch(
           :validate-otp-fn="validateOtp"
           :resend-code-fn="resendCode"
           :is-otp-error="isOtpError"
+          :t="properties.tOtp"
           @success="onOtpSuccess"
         />
       </Transition>

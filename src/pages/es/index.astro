@@ -1,0 +1,61 @@
+---
+import SplashScreen from "@/components/splash-screen.astro";
+import LandingScreen from "@/components/landing-screen.astro";
+
+import Layout from "@/layouts/layout.astro";
+---
+
+<Layout>
+  <div id="splash" class="fixed inset-0 z-50 transition-opacity duration-500">
+    <SplashScreen />
+  </div>
+  <div
+    id="landing"
+    class="fixed inset-0 z-40 opacity-0 transition-opacity duration-500 pointer-events-none"
+  >
+    <LandingScreen />
+  </div>
+</Layout>
+
+<script>
+  // Animation timing constants
+  const SPLASH_DURATION = 2000;
+
+  const initSplashScreen = () => {
+    const splash = document.getElementById("splash");
+    const landing = document.getElementById("landing");
+
+    if (!splash || !landing) return;
+
+    // Reset initial state
+    splash.style.display = "block";
+    splash.style.opacity = "1";
+    splash.style.pointerEvents = "auto";
+
+    landing.style.display = "none";
+    landing.style.opacity = "0";
+    landing.style.pointerEvents = "none";
+
+    // Transition from splash to landing
+    setTimeout(() => {
+      splash.style.opacity = "0";
+      splash.style.pointerEvents = "none";
+
+      landing.style.display = "block";
+      landing.style.opacity = "1";
+      landing.style.pointerEvents = "auto";
+
+      setTimeout(() => {
+        splash.style.display = "none";
+      }, 500);
+    }, SPLASH_DURATION);
+  };
+
+  // Run on initial page load
+  initSplashScreen();
+
+  // Re-run when navigating back with View Transitions
+  document.addEventListener("astro:page-load", () => {
+    initSplashScreen();
+  });
+</script>

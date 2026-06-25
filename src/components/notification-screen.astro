@@ -1,6 +1,10 @@
 ---
 import { Image } from "astro:assets";
 import Notifications from "../assets/images/notifications.png";
+import { getTranslations } from "@/i18n/utilities";
+
+const currentLang = (Astro.currentLocale ?? "en") as "en" | "es";
+const t = getTranslations(currentLang);
 ---
 
 <div class="h-full flex flex-col safe-area-inset">
@@ -31,11 +35,10 @@ import Notifications from "../assets/images/notifications.png";
     <div class="flex flex-col flex-1">
       <div class="space-y-3">
         <p class="tpc-typography-title-m text-tpc-fg-default">
-          No te pierdas nada sobre tu viaje.
+          {t.notification.title}
         </p>
         <p class="tpc-typography-body-m text-tpc-fg-default">
-          Recibe notificaciones sobre ofertas especiales, tus próximos viajes y
-          actividades durante tu estadía.
+          {t.notification.description}
         </p>
       </div>
     </div>
@@ -44,10 +47,10 @@ import Notifications from "../assets/images/notifications.png";
         id="enable-notifications-btn"
         class="py-4 px-5.5 bg-[#183456] rounded-full text-white"
       >
-        Habilitar notificaciones
+        {t.notification.enableButton}
       </button>
       <button id="skip-notifications-btn" class="underline">
-        Omitir por ahora
+        {t.notification.skipButton}
       </button>
     </div>
   </div>

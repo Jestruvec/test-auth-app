@@ -2,6 +2,7 @@
 import { ProgressBar } from "@tpc-development/mare-ui-components";
 import IconCircle from "@assets/svg/circle.svg";
 import IconCircleCheckFilled from "@assets/svg/circle-check-filled-blue.svg";
+import type { ui } from "@/i18n/ui";
 
 interface PasswordValidations {
   minLength: boolean;
@@ -20,6 +21,7 @@ interface Properties {
   validations: PasswordValidations;
   progress: number;
   strength: PasswordStrength;
+  t: (typeof ui)[keyof typeof ui]["passwordStrength"];
 }
 
 defineProps<Properties>();
@@ -32,7 +34,7 @@ defineProps<Properties>();
     <div>
       <div class="flex justify-between items-center">
         <p class="tpc-typography-label-s text-tpc-fg-default">
-          Choose a password
+          {{ t.chooseLabel }}
         </p>
         <p
           v-if="strength.label"
@@ -64,7 +66,7 @@ defineProps<Properties>();
           alt="circle check"
         />
 
-        <span>At least 8 characters</span>
+        <span>{{ t.minLength }}</span>
       </div>
       <div class="flex gap-2 items-center">
         <img
@@ -75,7 +77,7 @@ defineProps<Properties>();
           "
           alt="circle check"
         />
-        <span>One uppercase letter</span>
+        <span>{{ t.uppercase }}</span>
       </div>
       <div class="flex gap-2 items-center">
         <img
@@ -84,7 +86,7 @@ defineProps<Properties>();
           "
           alt="circle check"
         />
-        <span>One number</span>
+        <span>{{ t.number }}</span>
       </div>
       <div class="flex gap-2 items-center">
         <img
@@ -95,7 +97,7 @@ defineProps<Properties>();
           "
           alt="circle check"
         />
-        <span>One special character</span>
+        <span>{{ t.specialChar }}</span>
       </div>
     </div>
   </div>

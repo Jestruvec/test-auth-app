@@ -14,38 +14,43 @@ import Service_2 from "@assets/images/guest-services/restaurants.png";
 import Service_3 from "@assets/images/guest-services/room-service.png";
 import Service_4 from "@assets/images/guest-services/spa.png";
 import Service_5 from "@assets/images/guest-services/tours.png";
+import { getTranslations } from "@/i18n/utilities";
+import { getRelativeLocaleUrl } from "astro:i18n";
+
+const currentLang = (Astro.currentLocale ?? "en") as "en" | "es";
+const t = getTranslations(currentLang);
 
 const cards = [
-  { title: "Tours", image: Service_5 },
-  { title: "Entertainments", image: Service_1 },
-  { title: "Restaurants", image: Service_2 },
-  { title: "Room Service", image: Service_3 },
-  { title: "Spa", image: Service_4 },
+  { title: t.landing.services.tours, image: Service_5 },
+  { title: t.landing.services.entertainment, image: Service_1 },
+  { title: t.landing.services.restaurants, image: Service_2 },
+  { title: t.landing.services.roomService, image: Service_3 },
+  { title: t.landing.services.spa, image: Service_4 },
 ];
 
 const contentSlides = [
   {
-    title: "The whole resort in one place",
+    title: t.landing.carousel.slide1,
     colors: { l: "#86e0f9", m: "#016692", d: "#022648" },
   },
   {
     image: Carousel_2,
-    title: "Save time on your check-in",
+    title: t.landing.carousel.slide2,
     colors: { l: "#d7cef9", m: "#3c5184", d: "#15163a" },
   },
   {
     image: Carousel_3,
-    title: "From the menu to your room",
+    title: t.landing.carousel.slide3,
     colors: { l: "#dcd4ce", m: "#454f52", d: "#171514" },
   },
   {
     image: Carousel_4,
-    title: "Every day brings something new",
+    title: t.landing.carousel.slide4,
     colors: { l: "#bcdccb", m: "#235e5b", d: "#0e251f" },
   },
   {
     image: Carousel_5,
-    title: "Need anything? Just ask",
+    title: t.landing.carousel.slide5,
     colors: { l: "#b6dce8", m: "#155b6f", d: "#08242f" },
   },
 ];
@@ -78,23 +83,23 @@ const contentSlides = [
 
     <div class="flex flex-col gap-3">
       <a
-        href="/register"
+        href={getRelativeLocaleUrl(currentLang, "/register")}
         class="py-2.5 px-5.5 bg-white rounded-full tpc-typography-label-m text-center no-underline text-black"
       >
-        Register
+        {t.landing.buttons.register}
       </a>
       <a
-        href="/login"
+        href={getRelativeLocaleUrl(currentLang, "/login")}
         class="rounded-full border-none text-white! py-2.5 px-5.5 tpc-typography-label-m text-center no-underline"
         style="background: rgba(255, 255, 255, 0.08)"
       >
-        Log in
+        {t.landing.buttons.login}
       </a>
       <button
         id="guest-btn"
         class="rounded-full border-none text-white! py-2.5 px-5.5 tpc-typography-label-s"
       >
-        Continue as guest
+        {t.landing.buttons.guest}
       </button>
     </div>
   </div>
