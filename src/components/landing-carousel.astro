@@ -24,11 +24,12 @@ const { slides } = Astro.props;
       {
         slides.map((slide, index) => {
           if (!slide.image) return null;
+          const isLastSlide = index === slides.length - 1;
           return (
             <Image
               src={slide.image}
               alt={slide.title}
-              class="carousel-image"
+              class={`carousel-image ${isLastSlide ? "carousel-image-last" : ""}`}
               data-slide={index + 1}
               loading="eager"
               fetchpriority="auto"
@@ -66,6 +67,7 @@ const { slides } = Astro.props;
 
 <script define:vars={{ slides }}>
   let currentSlide = 0;
+  let autoAdvanceInterval = null;
 
   const updateIndicators = () => {
     const indicators = document.querySelectorAll(".slide-indicator");
@@ -166,31 +168,50 @@ const { slides } = Astro.props;
     }
 
     // Reset auto-advance interval on swipe
-    clearInterval(autoAdvanceInterval);
+    if (autoAdvanceInterval) clearInterval(autoAdvanceInterval);
     autoAdvanceInterval = setInterval(nextSlide, 5000);
   };
 
-  // Attach touch handlers to carousel container
-  const landingContent = document.getElementById("landing-content");
-  if (landingContent) {
-    landingContent.addEventListener("touchstart", handleTouchStart, {
-      passive: true,
-    });
-    landingContent.addEventListener("touchend", handleTouchEnd, {
-      passive: true,
-    });
-  }
+  const initCarousel = () => {
+    // Reset state
+    currentSlide = 0;
+    if (autoAdvanceInterval) clearInterval(autoAdvanceInterval);
 
-  // Attach click handlers to slide indicators
-  let autoAdvanceInterval = setInterval(nextSlide, 5000);
-  const indicators = document.querySelectorAll(".slide-indicator");
-  indicators.forEach((indicator) => {
-    indicator.addEventListener("click", () => {
-      const index = parseInt(indicator.getAttribute("data-index") || "0");
-      goToSlide(index);
-      clearInterval(autoAdvanceInterval);
-      autoAdvanceInterval = setInterval(nextSlide, 5000);
+    // Attach touch handlers to carousel container
+    const landingContent = document.getElementById("landing-content");
+    if (landingContent) {
+      landingContent.addEventListener("touchstart", handleTouchStart, {
+        passive: true,
+      });
+      landingContent.addEventListener("touchend", handleTouchEnd, {
+        passive: true,
+      });
+    }
+
+    // Attach click handlers to slide indicators
+    const indicators = document.querySelectorAll(".slide-indicator");
+    indicators.forEach((indicator) => {
+      indicator.addEventListener("click", () => {
+        const index = parseInt(indicator.getAttribute("data-index") || "0");
+        goToSlide(index);
+        if (autoAdvanceInterval) clearInterval(autoAdvanceInterval);
+        autoAdvanceInterval = setInterval(nextSlide, 5000);
+      });
     });
+
+    // Start auto-advance
+    autoAdvanceInterval = setInterval(nextSlide, 5000);
+  };
+
+  // Initialize on first load
+  initCarousel();
+
+  // Re-initialize after View Transitions navigation
+  document.addEventListener("astro:page-load", initCarousel);
+
+  // Cleanup on page leave
+  document.addEventListener("astro:before-preparation", () => {
+    if (autoAdvanceInterval) clearInterval(autoAdvanceInterval);
   });
 </script>
 
@@ -266,5 +287,9 @@ const { slides } = Astro.props;
   .carousel-image:not(.active) {
     position: absolute;
     left: -9999px;
+  }
+
+  .carousel-image-last {
+    object-fit: cover;
   }
 </style>
