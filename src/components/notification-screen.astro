@@ -1,9 +1,9 @@
 ---
 import { Image } from "astro:assets";
 import Notifications from "../assets/images/notifications.png";
-import { getTranslations } from "@/i18n/utilities";
+import { getTranslations, getLangFromUrl } from "@/i18n/utilities";
 
-const currentLang = (Astro.currentLocale ?? "en") as "en" | "es";
+const currentLang = getLangFromUrl(Astro.url);
 const t = getTranslations(currentLang);
 ---
 

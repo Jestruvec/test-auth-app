@@ -1,20 +1,14 @@
 ---
 import Layout from "@/layouts/layout.astro";
 import LoginForm from "@/components/login-form.vue";
-import { getTranslations } from "@/i18n/utilities";
-import { defaultLang, ui } from "@/i18n/ui";
+import { getTranslations, getLangFromUrl } from "@/i18n/utilities";
 
-const currentLang = Astro.currentLocale ?? defaultLang;
-const t = getTranslations(currentLang as keyof typeof ui);
+const currentLang = getLangFromUrl(Astro.url);
+const t = getTranslations(currentLang);
 ---
 
 <Layout>
   <div id="login-form" class="fixed inset-0 z-40 bg-tpc-bg-default">
-    <LoginForm
-      client:load
-      t={t.login}
-      tOtp={t.otp}
-      lang={currentLang as "en" | "es"}
-    />
+    <LoginForm client:load t={t.login} tOtp={t.otp} lang={currentLang} />
   </div>
 </Layout>

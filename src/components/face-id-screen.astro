@@ -1,9 +1,9 @@
 ---
 import { Image } from "astro:assets";
 import FaceId from "@assets/images/face-id.png";
-import { getTranslations } from "@/i18n/utilities";
+import { getTranslations, getLangFromUrl } from "@/i18n/utilities";
 
-const currentLang = (Astro.currentLocale ?? "en") as "en" | "es";
+const currentLang = getLangFromUrl(Astro.url);
 const t = getTranslations(currentLang);
 ---
 

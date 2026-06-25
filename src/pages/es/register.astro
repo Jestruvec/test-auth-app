@@ -4,10 +4,9 @@ import RegisterForm from "@/components/register-form.vue";
 import CompleteScreen from "@/components/complete-screen.astro";
 import FaceIdScreen from "@/components/face-id-screen.astro";
 import NotificationScreen from "@/components/notification-screen.astro";
-import { getTranslations } from "@/i18n/utilities";
-import { defaultLang, ui } from "@/i18n/ui";
+import { getTranslations, getLangFromUrl } from "@/i18n/utilities";
 
-const currentLang = (Astro.currentLocale ?? defaultLang) as keyof typeof ui;
+const currentLang = getLangFromUrl(Astro.url);
 const t = getTranslations(currentLang);
 ---
 

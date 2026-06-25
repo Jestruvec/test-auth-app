@@ -14,10 +14,9 @@ import Service_2 from "@assets/images/guest-services/restaurants.png";
 import Service_3 from "@assets/images/guest-services/room-service.png";
 import Service_4 from "@assets/images/guest-services/spa.png";
 import Service_5 from "@assets/images/guest-services/tours.png";
-import { getTranslations } from "@/i18n/utilities";
-import { getRelativeLocaleUrl } from "astro:i18n";
+import { getTranslations, getLangFromUrl } from "@/i18n/utilities";
 
-const currentLang = (Astro.currentLocale ?? "en") as "en" | "es";
+const currentLang = getLangFromUrl(Astro.url);
 const t = getTranslations(currentLang);
 
 const cards = [
@@ -83,13 +82,13 @@ const contentSlides = [
 
     <div class="flex flex-col gap-3">
       <a
-        href={getRelativeLocaleUrl(currentLang, "/register")}
+        href={`/${currentLang}/register`}
         class="py-2.5 px-5.5 bg-white rounded-full tpc-typography-label-m text-center no-underline text-black"
       >
         {t.landing.buttons.register}
       </a>
       <a
-        href={getRelativeLocaleUrl(currentLang, "/login")}
+        href={`/${currentLang}/login`}
         class="rounded-full border-none text-white! py-2.5 px-5.5 tpc-typography-label-m text-center no-underline"
         style="background: rgba(255, 255, 255, 0.08)"
       >

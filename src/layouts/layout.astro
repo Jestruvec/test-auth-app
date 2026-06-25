@@ -1,8 +1,9 @@
 ---
 import "@/assets/styles/index.css";
+import { getLangFromUrl } from "@/i18n/utilities";
 import { ClientRouter } from "astro:transitions";
 
-const currentLang = Astro.currentLocale ?? "en";
+const currentLang = getLangFromUrl(Astro.url);
 ---
 
 <!doctype html>

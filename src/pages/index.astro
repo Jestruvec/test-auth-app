@@ -1,7 +1,28 @@
 ---
-const acceptLanguage = Astro.request.headers.get("accept-language") || "";
-console.log(acceptLanguage);
-const preferredLang = acceptLanguage.includes("es") ? "es" : "en";
-
-return Astro.redirect(`/${preferredLang}/`);
+import { defaultLang } from "@/i18n/ui";
 ---
+
+<!doctype html>
+<html lang={defaultLang}>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Redirecting...</title>
+  </head>
+  <body>
+    <script>
+      // Detectar idioma del navegador
+      const browserLang = navigator.language.split("-")[0];
+      const supportedLangs = ["en", "es"];
+      const defaultLang = "en";
+
+      // Usar el idioma del navegador si está soportado, sino usar el default
+      const preferredLang = supportedLangs.includes(browserLang)
+        ? browserLang
+        : defaultLang;
+
+      // Redirigir al idioma preferido
+      window.location.href = `/${preferredLang}/`;
+    </script>
+  </body>
+</html>
