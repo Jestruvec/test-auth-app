@@ -52,12 +52,12 @@ const { slides } = Astro.props;
     {
       slides.map((_, index) => (
         <button
-          class="slide-indicator h-2 rounded-full transition-all"
+          class="slide-indicator h-1.5 rounded-full transition-all"
           data-index={index}
           style={
             index === 0
-              ? "width: 32px; background: white;"
-              : "width: 8px; background: rgba(255, 255, 255, 0.3);"
+              ? "width: 18px; background: white;"
+              : "width: 6px; background: rgba(255, 255, 255, 0.3);"
           }
         />
       ))
@@ -73,10 +73,10 @@ const { slides } = Astro.props;
     const indicators = document.querySelectorAll(".slide-indicator");
     indicators.forEach((indicator, index) => {
       if (index === currentSlide) {
-        indicator.style.width = "32px";
+        indicator.style.width = "18px";
         indicator.style.background = "white";
       } else {
-        indicator.style.width = "8px";
+        indicator.style.width = "6px";
         indicator.style.background = "rgba(255, 255, 255, 0.3)";
       }
     });
