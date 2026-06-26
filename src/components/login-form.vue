@@ -145,7 +145,7 @@ watch(
 <template>
   <div class="flex flex-col h-full max-w-md mx-auto safe-area-inset">
     <div class="flex justify-between items-center gap-2 h-14 px-6 py-2">
-      <a href="/" class="w-5 h-5 flex items-center justify-center">
+      <a :href="`/${properties.lang}`" class="w-5 h-5 flex items-center justify-center">
         <img :src="IconX.src" alt="close icon" />
       </a>
     </div>
