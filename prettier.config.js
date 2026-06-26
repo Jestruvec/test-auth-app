@@ -1,0 +1,34 @@
+/**
+ * @type {import('prettier').Options}
+ */
+const config = {
+  arrowParens: "always",
+  bracketSpacing: true,
+  endOfLine: "lf",
+  htmlWhitespaceSensitivity: "css",
+  insertPragma: false,
+  jsxBracketSameLine: false,
+  jsxSingleQuote: true,
+  printWidth: 80,
+  proseWrap: "preserve",
+  quoteProps: "as-needed",
+  requirePragma: false,
+  semi: true,
+  singleQuote: true,
+  tabWidth: 4,
+  trailingComma: "es5",
+  useTabs: true,
+  vueIndentScriptAndStyle: true,
+  singleAttributePerLine: true,
+  plugins: ["prettier-plugin-astro"],
+  overrides: [
+    {
+      files: "*.astro",
+      options: {
+        parser: "astro",
+      },
+    },
+  ],
+};
+
+export default config;
