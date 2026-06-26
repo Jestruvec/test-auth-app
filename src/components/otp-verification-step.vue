@@ -78,7 +78,10 @@ onMounted(startOtpTimer);
         <h2 class="tpc-typography-title-m text-tpc-fg-default">
           {{ properties.t.title }}
         </h2>
-        <p class="tpc-typography-body-m text-tpc-fg-default">
+        <p
+          class="tpc-typography-body-m text-tpc-fg-default"
+          style="text-wrap: balance"
+        >
           {{ properties.t.description.replace("{email}", maskedEmail) }}
         </p>
       </div>

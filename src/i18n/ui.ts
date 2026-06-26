@@ -61,21 +61,21 @@ export const ui = {
     login: {
       title: "Bienvenido de nuevo",
       description:
-        "Usa tu Palace ID para iniciar sesión. Si eres miembro, usa tu cuenta Palace Elite.",
+        "Utiliza tu Palace ID para iniciar sesión. Si eres socio, usa tu cuenta de Palace Elite.",
       emailLabel: "Correo electrónico",
       passwordLabel: "Contraseña",
       forgotPasswordLink: "¿Olvidaste tu contraseña?",
       submitButton: "Iniciar sesión",
       noAccountText: "¿No tienes cuenta?",
-      signUpLink: "Regístrate",
-      errorInvalid: "Correo o contraseña incorrectos.",
+      signUpLink: "Regístrarse",
+      errorInvalid: "Correo electrónico o contraseña incorrectos.",
       existingAccountBanner:
         "Ya tienes una cuenta. Ingresa tu contraseña para iniciar sesión.",
     },
     register: {
       title: "Crea tu cuenta",
       description:
-        "permite iniciar sesión y gestionar los servicios de todas nuestras marcas desde la misma cuenta.",
+        "te permite iniciar sesión y administrar los servicios de todas nuestras marcas desde la misma cuenta.",
       palaceIdLink: "Palace ID",
       emailLabel: "Correo electrónico",
       firstNameLabel: "Nombre",
@@ -88,8 +88,9 @@ export const ui = {
       confirmPasswordLabel: "Confirma la contraseña",
       termsText: "Al crear un Palace ID, aceptas nuestros",
       termsLink: "Términos de Uso",
+      termsAndPrivacyConnector: "y",
       privacyLink: "Política de Privacidad",
-      createButton: "Crear mi Palace ID",
+      createButton: "Crear mi cuenta",
       cancelTitle: "¿Cancelar registro?",
       cancelMessage:
         "Tu progreso se perderá. Tendrás que empezar de nuevo si sales.",
@@ -145,7 +146,7 @@ export const ui = {
       loginButton: "Iniciar sesión",
     },
     otp: {
-      title: "Verifica tu correo",
+      title: "Verifica tu email",
       description: "Ingresa el código de 6 dígitos que enviamos a {email}",
       validating: "Validando...",
       errorIncorrect:
@@ -245,7 +246,7 @@ export const ui = {
     register: {
       title: "Create your account",
       description:
-        "allows you to log in and manage services across all our brands from the same account.",
+        "allows you to log in and manage the services of all our brands from the same account.",
       palaceIdLink: "Palace ID",
       emailLabel: "Email",
       firstNameLabel: "First name",
@@ -258,8 +259,9 @@ export const ui = {
       confirmPasswordLabel: "Confirm password",
       termsText: "By creating a Palace ID, you agree to our",
       termsLink: "Terms of Use",
+      termsAndPrivacyConnector: "and",
       privacyLink: "Privacy Policy",
-      createButton: "Create my Palace ID",
+      createButton: "Create my account",
       cancelTitle: "Cancel Sign Up?",
       cancelMessage:
         "Your progress will be lost. You will have to start over if you exit.",
