@@ -15,7 +15,7 @@ export function getUserFullName(user: User): string {
 
 export function getUserInitials(user: User): string {
   if (!user.firstName && !user.lastName) {
-    return user.username.substring(0, 2).toUpperCase();
+    return user.username.slice(0, 2).toUpperCase();
   }
   const firstInitial = user.firstName?.charAt(0) ?? "";
   const lastInitial = user.lastName?.charAt(0) ?? "";

@@ -133,7 +133,7 @@ watch(step, (newStep) => {
   }
 });
 
-// El code/email del link no deben quedar en el historial ni en logs del browser:
+// El code/email del link no deben quedar en el historical ni en logs del browser:
 // ya los tenemos en refs, así que limpiamos la URL apenas montamos.
 onMounted(() => {
   if (cameFromLink.value) {

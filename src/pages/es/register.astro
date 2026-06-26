@@ -12,7 +12,13 @@ const t = getTranslations(currentLang);
 
 <Layout>
   <div id="register-form" class="fixed inset-0 z-40 bg-tpc-bg-default">
-    <RegisterForm client:load t={t.register} tOtp={t.otp} tPassword={t.passwordStrength} lang={currentLang as "en" | "es"} />
+    <RegisterForm
+      client:load
+      t={t.register}
+      tOtp={t.otp}
+      tPassword={t.passwordStrength}
+      lang={currentLang as "en" | "es"}
+    />
   </div>
   <div
     id="complete"

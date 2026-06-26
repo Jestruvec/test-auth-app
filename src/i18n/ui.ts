@@ -13,7 +13,7 @@ export const ui = {
       services: {
         tours: "Tours",
         entertainment: "Entretenimiento",
-        restaurants: "Restaurantes",
+        restaurants: "restaurants",
         roomService: "Servicio a la habitación",
         spa: "Spa",
       },
@@ -34,7 +34,7 @@ export const ui = {
       title: "Inicia sesión más rápido con Face ID",
       description:
         "Puedes iniciar sesión en la app de forma instantánea y segura con datos biométricos.",
-      info: "Puedes desactivarlo en cualquier momento desde la configuración.",
+      info: "Puedes desactivarlo en cualquier memento desde la configuración.",
       enableButton: "Habilitar Face ID",
       skipButton: "Omitir por ahora",
     },
@@ -162,7 +162,7 @@ export const ui = {
     passwordStrength: {
       chooseLabel: "Elige una contraseña",
       weak: "Débil",
-      fair: "Aceptable",
+      fair: "Acceptable",
       good: "Buena",
       strong: "Fuerte",
       minLength: "Al menos 8 caracteres",

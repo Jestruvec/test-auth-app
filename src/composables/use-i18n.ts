@@ -14,7 +14,7 @@ export function useI18n(locale?: Ref<string | undefined> | string) {
     // Fallback: detectar desde la URL (solo en cliente)
     if (typeof window !== "undefined") {
       const path = window.location.pathname;
-      const lang = path.split("/")[1];
+      const lang = path.split("/", 2)[1];
       return lang === "es" || lang === "en" ? lang : "en";
     }
 
